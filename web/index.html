@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="VibeTrace — time travel for vibe coding." />
+  <title>VibeTrace ✦ Time travel for vibe coding</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <div class="brand"><span class="spark">✦</span> VibeTrace</div>
+    <div class="status"><span class="dot"></span> local-first</div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">TIME TRAVEL FOR VIBE CODING</p>
+      <h1>See what your AI<br><span>actually changed.</span></h1>
+      <p class="lede">Every prompt becomes a checkpoint with code impact, blast radius, and a replayable timeline.</p>
+      <div class="hero-actions">
+        <button id="newCheckpoint" class="primary">Create demo checkpoint</button>
+        <a class="ghost" href="https://github.com/feifeing/vibetrace" target="_blank" rel="noreferrer">View on GitHub ↗</a>
+      </div>
+    </section>
+
+    <section class="app-grid">
+      <aside class="timeline-panel card">
+        <div class="panel-head">
+          <div>
+            <span class="label">SESSION</span>
+            <h2>Prompt timeline</h2>
+          </div>
+          <span id="countBadge" class="badge"></span>
+        </div>
+        <div id="timeline" class="timeline"></div>
+      </aside>
+
+      <section class="detail-panel card">
+        <div id="detail"></div>
+      </section>
+    </section>
+
+    <section class="compare card">
+      <div class="panel-head">
+        <div>
+          <span class="label">VISUAL REPLAY</span>
+          <h2>Before / After</h2>
+        </div>
+        <span class="badge">interactive concept</span>
+      </div>
+      <div class="compare-stage" id="compareStage">
+        <div class="screen before">
+          <div class="browserbar"><i></i><i></i><i></i></div>
+          <div class="mock hero-old"><span>Build faster.</span><button>Get started</button></div>
+        </div>
+        <div class="screen after" id="afterScreen">
+          <div class="browserbar"><i></i><i></i><i></i></div>
+          <div class="mock hero-new"><small>INTRODUCING ORBIT</small><span>Build at the speed<br>of thought.</span><button>Start creating →</button></div>
+        </div>
+        <div class="wipe" id="wipe"></div>
+        <input aria-label="Compare before and after" id="slider" type="range" min="0" max="100" value="58" />
+      </div>
+      <p class="hint">Drag to replay a hypothetical UI change.</p>
+    </section>
+  </main>
+
+  <dialog id="checkpointDialog">
+    <form method="dialog" id="checkpointForm">
+      <div class="dialog-head"><span class="spark">✦</span><strong>New vibe checkpoint</strong></div>
+      <label>Prompt<textarea id="promptInput" required placeholder="e.g. Make the pricing section feel more premium"></textarea></label>
+      <label>Files touched<input id="filesInput" type="number" min="1" max="30" value="4" /></label>
+      <div class="dialog-actions"><button value="cancel" class="ghost">Cancel</button><button value="default" id="saveCheckpoint" class="primary">Create checkpoint</button></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

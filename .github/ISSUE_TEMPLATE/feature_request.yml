@@ -1,0 +1,39 @@
+name: Focused feature proposal
+description: Propose an improvement to the prompt-to-evidence workflow.
+title: "proposal: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Developer problem
+      description: What question about an AI-generated change is currently hard to answer?
+    validations:
+      required: true
+  - type: dropdown
+    id: evidence
+    attributes:
+      label: Evidence-chain stage
+      options:
+        - Prompt intent
+        - Code change
+        - Blast Radius
+        - Visual evidence
+        - Regression risk
+        - Replay or restore
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Smallest useful solution
+      description: Describe the narrowest complete workflow, not a platform-sized feature list.
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Accuracy and product boundaries
+      description: What could this misclassify, and what should VibeTrace explicitly not claim?
+    validations:
+      required: true

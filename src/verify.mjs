@@ -15,12 +15,15 @@ function parse(argv) {
     if (token.startsWith("-")) throw new Error(`Unknown option: ${token}`);
     positionals.push(token);
   }
-  if (positionals.length > 1) throw new Error(`Unexpected argument: ${positionals[1]}`);
+  if (positionals.length > 1)
+    throw new Error(`Unexpected argument: ${positionals[1]}`);
   return { checkpoint: positionals[0] || null, options };
 }
 
 function resolve(checkpoints, token) {
-  const completed = checkpoints.filter((checkpoint) => checkpoint.status === "completed");
+  const completed = checkpoints.filter(
+    (checkpoint) => checkpoint.status === "completed",
+  );
   if (!token) {
     if (!completed[0]) throw new Error("No completed checkpoint exists yet.");
     return completed[0];
@@ -28,8 +31,10 @@ function resolve(checkpoints, token) {
   const matches = completed.filter(
     (checkpoint) => checkpoint.id === token || checkpoint.id.startsWith(token),
   );
-  if (matches.length === 0) throw new Error(`Checkpoint ${token} was not found.`);
-  if (matches.length > 1) throw new Error(`Checkpoint prefix ${token} is ambiguous.`);
+  if (matches.length === 0)
+    throw new Error(`Checkpoint ${token} was not found.`);
+  if (matches.length > 1)
+    throw new Error(`Checkpoint prefix ${token} is ambiguous.`);
   return matches[0];
 }
 

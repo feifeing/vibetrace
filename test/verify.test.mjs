@@ -88,7 +88,10 @@ test("receipt verification succeeds for unchanged evidence and fails after tampe
   const result = JSON.parse(failedOut.value());
   assert.equal(result.valid, false);
   assert.equal(result.reason, "evidence-mismatch");
-  assert.notEqual(result.receipt.expectedReceiptId, result.receipt.actualReceiptId);
+  assert.notEqual(
+    result.receipt.expectedReceiptId,
+    result.receipt.actualReceiptId,
+  );
 });
 
 test("verification reads visual files and rejects a replaced artifact", async () => {
@@ -133,7 +136,9 @@ test("verification reads visual files and rejects a replaced artifact", async ()
   const verified = JSON.parse(verifiedOut.value());
   assert.equal(verified.valid, true);
   assert.equal(verified.artifacts.length, 2);
-  assert.ok(verified.artifacts.every((artifact) => artifact.status === "verified"));
+  assert.ok(
+    verified.artifacts.every((artifact) => artifact.status === "verified"),
+  );
 
   await writeFile(afterPath, Buffer.from("replaced-image-evidence"));
 
@@ -149,5 +154,8 @@ test("verification reads visual files and rejects a replaced artifact", async ()
   const failed = JSON.parse(failedOut.value());
   assert.equal(failed.valid, false);
   assert.equal(failed.reason, "artifact-mismatch");
-  assert.equal(failed.artifacts.find((artifact) => artifact.phase === "after").status, "mismatch");
+  assert.equal(
+    failed.artifacts.find((artifact) => artifact.phase === "after").status,
+    "mismatch",
+  );
 });

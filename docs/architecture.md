@@ -12,13 +12,15 @@ VibeTrace v0.2 is deliberately a small local CLI plus a standalone report. Its a
 6. A completed checkpoint has stable before and after Git objects.
 7. A no-op one-step checkpoint is rejected.
 8. The browser report renders stored analysis; it does not silently rescore it.
+9. Restore is dry-run by default and must refuse to overwrite post-checkpoint drift.
+10. An applied restore must leave `HEAD` and the real Git index unchanged and verify the resulting worktree against the recorded before-state.
 
 ## Three-layer evidence model
 
 VibeTrace deliberately separates three questions that are often collapsed into one AI-risk score:
 
 1. **Intent — what was asked?** `src/core/intent.mjs` conservatively infers likely domains and scale from the prompt. This is heuristic context, not authorization.
-2. **Authorization — what was explicitly allowed?** `src/core/contract.mjs` represents optional user-declared path and change-budget constraints. A contract can allow path globs, protect path globs, and cap file/line counts.
+2. **Authorization — what was explicitly allowed?** `src/core/contract.mjs` represents optional user-declared path, protected-surface, and change-budget constraints. A contract can allow path globs, protect path globs or deterministic repository surfaces, and cap file, line, and module counts.
 3. **Effect — what actually happened?** Git objects, normalized diffs, visual captures, and deterministic analysis describe the observed result.
 
 This distinction matters because a prompt can be vague while an authorization boundary is precise. An inferred prompt mismatch is therefore reported separately from **authorization drift**.
@@ -30,8 +32,10 @@ vibetrace attest \
   --prompt "Change the button color" \
   --allow "src/components/**,src/styles/**" \
   --deny "src/auth/**,src/router/**" \
+  --protect-surface "database,dependencies,ci" \
   --max-files 3 \
-  --max-lines 80
+  --max-lines 80 \
+  --max-modules 2
 ```
 
 The command exits with status `2` when the declared contract is violated, which makes it usable in scripts without pretending to be an autonomous policy engine.
@@ -100,7 +104,7 @@ New authorization and receipt fields are additive so existing v2 checkpoint read
 
 Blast Radius answers “how far did this change spread?” Risk answers “what deserves review?” They share evidence but are separate outputs.
 
-Prompt-intent mismatch compares inferred expected signals and scale with actual file signals and module count. **Authorization drift** is stronger evidence because it compares observed files and budgets with boundaries the user explicitly declared. The two are intentionally never collapsed into the same concept.
+Prompt-intent mismatch compares inferred expected signals and scale with actual file signals and module count. **Authorization drift** is stronger evidence because it compares observed files, protected surfaces, and budgets with boundaries the user explicitly declared. The two are intentionally never collapsed into the same concept.
 
 Sensitive classifications include CI, dependencies, auth, database, routing, public APIs, global styles, and configuration. All rules and caps live in importable modules with unit tests.
 
@@ -110,10 +114,30 @@ Playwright captures a fixed Chromium viewport with reduced motion and transition
 
 Layout evidence compares bounded visible-element rectangles by stable-enough selector paths. DOM evidence compares a hash and visible-node count. Both are heuristics. VibeTrace does not interpret semantic correctness.
 
-## Restore boundary
+## Guarded restore
 
-The private before/after refs make rollback possible, but safe restore must also detect drift after the checkpoint, preview created/deleted paths, account for untracked files, and require explicit confirmation. Until those invariants are implemented and tested, v0.2 exposes the evidence and refs without an automatic destructive restore command.
+`vibetrace restore [checkpoint]` turns the durable before/after evidence into an intentionally conservative rollback path.
+
+Restore proceeds in two phases:
+
+1. **Plan / dry run.** VibeTrace snapshots the current worktree and compares it with the selected checkpoint's recorded after-state. It reports the files that would be restored and any post-checkpoint drift. No worktree mutation occurs.
+2. **Explicit apply.** Only `--apply` permits mutation. Immediately before writing, VibeTrace snapshots the worktree again and repeats the drift check to narrow the plan/apply race window.
+
+If either drift check finds a difference, restore stops. There is no force flag, implicit stash, `git reset`, automatic merge, or silent deletion of later work.
+
+When the guard passes, `src/git/restore.mjs`:
+
+1. creates a temporary Git index outside the repository;
+2. loads the checkpoint after-state into that index;
+3. runs `git read-tree --reset -u <before>` through the temporary index so the worktree is transformed from the recorded after-state to the recorded before-state;
+4. removes the temporary index;
+5. snapshots the resulting worktree and requires an exact match with the checkpoint before-state; and
+6. verifies that the real `HEAD` and real index tree are unchanged.
+
+This design also handles files created by the checkpoint: because they are tracked by the temporary after-state index, a guarded restore can remove them without treating unrelated later untracked files as disposable.
+
+The restore invariant is deliberately narrow: VibeTrace can restore only when the current worktree still represents the recorded checkpoint after-state. Once subsequent work exists, the tool refuses to guess how that work should be rebased, stashed, merged, or discarded.
 
 ## Related work boundary
 
-AI change monitoring, intent tracking, path allowlists, Git checkpointing, visual regression, and blast-radius analysis all have prior art. VibeTrace does not claim those primitives as inventions. Its current technical focus is the **separation and binding of inferred intent, explicit authorization, and observed effect into one locally verifiable evidence record**. See [`related-work.md`](related-work.md) for the project's non-novelty claims and differentiation boundary.
+AI change monitoring, intent tracking, path allowlists, Git checkpointing, visual regression, blast-radius analysis, and rollback workflows all have prior art. VibeTrace does not claim those primitives as inventions. Its current technical focus is the **separation and binding of inferred intent, explicit authorization, observed effect, verification, and guarded rollback into one locally inspectable workflow**. See [`related-work.md`](related-work.md) for the project's non-novelty claims and differentiation boundary.

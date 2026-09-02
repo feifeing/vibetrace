@@ -128,7 +128,8 @@ test("verification rejects a private checkpoint ref that drifts from stored Git 
   assert.equal(verified.gitEvidence.length, 2);
   assert.ok(
     verified.gitEvidence.every(
-      (item) => item.objectStatus === "verified" && item.refStatus === "verified",
+      (item) =>
+        item.objectStatus === "verified" && item.refStatus === "verified",
     ),
   );
 

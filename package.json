@@ -1,15 +1,52 @@
 {
   "name": "vibetrace",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Time travel for vibe coding — inspect prompts, code changes, blast radius, and risk.",
+  "description": "Time travel for vibe coding — connect prompt intent to code impact, visual change, and explainable risk.",
   "type": "module",
+  "bin": {
+    "vibetrace": "./bin/vibetrace.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "web/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
-    "checkpoint": "node bin/vibetrace.mjs checkpoint"
+    "vibetrace": "node bin/vibetrace.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --test",
+    "test:e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run format:check && npm run check && npm test && npm run test:e2e"
+  },
+  "keywords": [
+    "ai-coding",
+    "developer-tools",
+    "git",
+    "visual-regression",
+    "vibe-coding",
+    "blast-radius"
+  ],
+  "homepage": "https://github.com/feifeing/vibetrace#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/feifeing/vibetrace.git"
+  },
+  "bugs": {
+    "url": "https://github.com/feifeing/vibetrace/issues"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "pngjs": "^7.0.0",
+    "prettier": "^3.9.6"
   },
   "license": "MIT"
 }

@@ -1,0 +1,50 @@
+name: Bug report
+description: Report incorrect capture, analysis, CLI, or report behavior.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Before sharing logs or checkpoints, remove prompts, paths, screenshots, or code that should stay private.
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include the command, expected behavior, and observed behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide the smallest safe sequence that reproduces the issue.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: VibeTrace version
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: macOS 15, Node 22, Git 2.51, Chromium 151
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected evidence layer
+      options:
+        - Git snapshot or diff
+        - Prompt intent or Blast Radius
+        - Risk score
+        - Playwright capture
+        - Pixel/layout/DOM comparison
+        - Report UI
+        - Other
+    validations:
+      required: true

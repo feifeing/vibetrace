@@ -1,80 +1,231 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="VibeTrace — time travel for vibe coding." />
-  <title>VibeTrace ✦ Time travel for vibe coding</title>
-  <link rel="stylesheet" href="./styles.css" />
-</head>
-<body>
-  <div class="noise"></div>
-  <header class="topbar">
-    <div class="brand"><span class="spark">✦</span> VibeTrace</div>
-    <div class="status"><span class="dot"></span> local-first</div>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="VibeTrace turns every AI coding prompt into an inspectable trail of code impact, visual change, and regression risk."
+    />
+    <meta name="theme-color" content="#08090c" />
+    <title>VibeTrace — Time travel for vibe coding</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
 
-  <main class="shell">
-    <section class="hero">
-      <p class="eyebrow">TIME TRAVEL FOR VIBE CODING</p>
-      <h1>See what your AI<br><span>actually changed.</span></h1>
-      <p class="lede">Every prompt becomes a checkpoint with code impact, blast radius, and a replayable timeline.</p>
-      <div class="hero-actions">
-        <button id="newCheckpoint" class="primary">Create demo checkpoint</button>
-        <a class="ghost" href="https://github.com/feifeing/vibetrace" target="_blank" rel="noreferrer">View on GitHub ↗</a>
+    <header class="topbar">
+      <a class="wordmark" href="#main" aria-label="VibeTrace home">
+        <svg class="mark" viewBox="0 0 38 38" aria-hidden="true">
+          <path d="M8 19a11 11 0 1 1 3.2 7.8" />
+          <path d="M11 31v-7h7" />
+          <circle cx="19" cy="19" r="3.2" />
+        </svg>
+        <span>VibeTrace</span>
+        <span class="version">v0.2</span>
+      </a>
+      <p class="tagline">Time travel for vibe coding.</p>
+      <div class="top-actions">
+        <span class="local-status"><i></i> local evidence</span>
+        <a
+          href="https://github.com/feifeing/vibetrace"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub <span aria-hidden="true">↗</span>
+        </a>
       </div>
-    </section>
+    </header>
 
-    <section class="app-grid">
-      <aside class="timeline-panel card">
-        <div class="panel-head">
-          <div>
-            <span class="label">SESSION</span>
-            <h2>Prompt timeline</h2>
-          </div>
-          <span id="countBadge" class="badge"></span>
-        </div>
-        <div id="timeline" class="timeline"></div>
-      </aside>
-
-      <section class="detail-panel card">
-        <div id="detail"></div>
-      </section>
-    </section>
-
-    <section class="compare card">
-      <div class="panel-head">
+    <main id="main" class="page-shell">
+      <section class="intro" aria-labelledby="page-title">
         <div>
-          <span class="label">VISUAL REPLAY</span>
-          <h2>Before / After</h2>
+          <p class="eyebrow"><span></span> SESSION 07 · PROMPT FORENSICS</p>
+          <h1 id="page-title">Every prompt leaves a trace.</h1>
         </div>
-        <span class="badge">interactive concept</span>
-      </div>
-      <div class="compare-stage" id="compareStage">
-        <div class="screen before">
-          <div class="browserbar"><i></i><i></i><i></i></div>
-          <div class="mock hero-old"><span>Build faster.</span><button>Get started</button></div>
-        </div>
-        <div class="screen after" id="afterScreen">
-          <div class="browserbar"><i></i><i></i><i></i></div>
-          <div class="mock hero-new"><small>INTRODUCING ORBIT</small><span>Build at the speed<br>of thought.</span><button>Start creating →</button></div>
-        </div>
-        <div class="wipe" id="wipe"></div>
-        <input aria-label="Compare before and after" id="slider" type="range" min="0" max="100" value="58" />
-      </div>
-      <p class="hint">Drag to replay a hypothetical UI change.</p>
-    </section>
-  </main>
+        <p class="intro-copy">
+          See what you asked, what the agent touched, what moved on screen, and
+          why the change deserves review.
+        </p>
+      </section>
 
-  <dialog id="checkpointDialog">
-    <form method="dialog" id="checkpointForm">
-      <div class="dialog-head"><span class="spark">✦</span><strong>New vibe checkpoint</strong></div>
-      <label>Prompt<textarea id="promptInput" required placeholder="e.g. Make the pricing section feel more premium"></textarea></label>
-      <label>Files touched<input id="filesInput" type="number" min="1" max="30" value="4" /></label>
-      <div class="dialog-actions"><button value="cancel" class="ghost">Cancel</button><button value="default" id="saveCheckpoint" class="primary">Create checkpoint</button></div>
-    </form>
-  </dialog>
+      <section class="trace-flow" aria-label="VibeTrace evidence chain">
+        <span class="flow-step active">01 <b>Prompt intent</b></span
+        ><i aria-hidden="true"></i>
+        <span class="flow-step">02 <b>Code change</b></span
+        ><i aria-hidden="true"></i>
+        <span class="flow-step">03 <b>Blast radius</b></span
+        ><i aria-hidden="true"></i>
+        <span class="flow-step">04 <b>Visual evidence</b></span
+        ><i aria-hidden="true"></i>
+        <span class="flow-step">05 <b>Risk / replay</b></span>
+      </section>
 
-  <script type="module" src="./app.js"></script>
-</body>
+      <section class="workspace" aria-label="VibeTrace session report">
+        <aside class="timeline-panel panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">PROMPT TIMELINE</p>
+              <h2>Current session</h2>
+            </div>
+            <span id="checkpointCount" class="count-pill">0</span>
+          </div>
+          <div class="branch-line" aria-hidden="true">
+            <span>main</span><i></i>
+          </div>
+          <div id="timeline" class="timeline" role="list"></div>
+          <div class="timeline-footer">
+            <span class="pulse-dot"></span>
+            <div>
+              <b>Evidence stays local</b><small>Git refs + readable JSON</small>
+            </div>
+          </div>
+        </aside>
+
+        <section class="evidence-panel panel" aria-labelledby="evidence-title">
+          <div class="evidence-header">
+            <div>
+              <p class="section-label">WHAT YOU ASKED</p>
+              <h2 id="evidence-title"></h2>
+            </div>
+            <button
+              id="copyId"
+              class="icon-button"
+              type="button"
+              aria-label="Copy checkpoint ID"
+              title="Copy checkpoint ID"
+            >
+              <span id="checkpointId"></span>
+              <svg viewBox="0 0 20 20" aria-hidden="true">
+                <path
+                  d="M7 6V4.8A1.8 1.8 0 0 1 8.8 3h6.4A1.8 1.8 0 0 1 17 4.8v6.4a1.8 1.8 0 0 1-1.8 1.8H14M4.8 7h6.4A1.8 1.8 0 0 1 13 8.8v6.4a1.8 1.8 0 0 1-1.8 1.8H4.8A1.8 1.8 0 0 1 3 15.2V8.8A1.8 1.8 0 0 1 4.8 7Z"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="visual-toolbar">
+            <div
+              class="view-tabs"
+              role="group"
+              aria-label="Visual comparison mode"
+            >
+              <button class="view-tab active" data-view="wipe" type="button">
+                Before / after
+              </button>
+              <button class="view-tab" data-view="diff" type="button">
+                Difference
+              </button>
+            </div>
+            <div class="viewport-label">
+              <span></span><b id="viewportText">1440 × 900</b> Chromium
+            </div>
+          </div>
+
+          <div id="visualStage" class="visual-stage" data-view="wipe">
+            <div class="browser-chrome">
+              <div class="traffic" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </div>
+              <span id="captureUrl">localhost:3000</span>
+              <span id="captureState" class="capture-state"
+                ><i></i> captured</span
+              >
+            </div>
+            <div
+              id="beforeFrame"
+              class="capture-frame before-frame"
+              aria-label="Before capture"
+            ></div>
+            <div
+              id="afterFrame"
+              class="capture-frame after-frame"
+              aria-label="After capture"
+            ></div>
+            <div
+              id="diffFrame"
+              class="capture-frame diff-frame"
+              aria-label="Pixel difference"
+            ></div>
+            <div id="wipeLine" class="wipe-line" aria-hidden="true">
+              <span>↔</span>
+            </div>
+            <input
+              id="compareSlider"
+              type="range"
+              min="0"
+              max="100"
+              value="52"
+              aria-label="Reveal before and after capture"
+            />
+            <span class="corner-label corner-before">BEFORE</span>
+            <span class="corner-label corner-after">AFTER</span>
+          </div>
+
+          <div
+            id="visualEvidence"
+            class="visual-evidence"
+            aria-label="Visual evidence layers"
+          ></div>
+          <p class="evidence-boundary">
+            Pixel, layout, and DOM evidence are measured. Semantic correctness
+            is not inferred.
+          </p>
+        </section>
+
+        <aside class="impact-panel panel">
+          <section class="blast-section" aria-labelledby="blast-title">
+            <div class="panel-heading compact">
+              <div>
+                <p class="section-label">WHAT THE AGENT TOUCHED</p>
+                <h2 id="blast-title">Blast radius</h2>
+              </div>
+              <span id="blastLevel" class="severity"></span>
+            </div>
+            <div class="blast-summary">
+              <strong id="blastScore">0</strong><span>/100</span>
+              <p id="blastSummary"></p>
+            </div>
+            <div id="mismatch" class="mismatch-card"></div>
+            <div
+              id="orbit"
+              class="impact-orbit"
+              aria-label="Touched modules"
+            ></div>
+          </section>
+
+          <section class="risk-section" aria-labelledby="risk-title">
+            <div class="risk-heading">
+              <div>
+                <p class="section-label">WHY IT MAY BE RISKY</p>
+                <h2 id="risk-title">Explainable risk</h2>
+              </div>
+              <div class="risk-score">
+                <span id="riskScore">0</span><b id="riskLevel">LOW</b>
+              </div>
+            </div>
+            <div id="riskFactors" class="risk-factors"></div>
+          </section>
+
+          <details class="files-drawer" open>
+            <summary><span>Changed files</span><b id="fileCount">0</b></summary>
+            <div id="fileList" class="file-list"></div>
+          </details>
+        </aside>
+      </section>
+
+      <section class="command-strip" aria-label="VibeTrace quick start">
+        <span class="terminal-dot">›_</span>
+        <code
+          >vibetrace checkpoint --prompt "Make the hero cinematic" --url
+          http://localhost:3000</code
+        >
+        <button id="copyCommand" type="button">Copy command</button>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
 </html>

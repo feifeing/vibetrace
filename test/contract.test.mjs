@@ -25,6 +25,36 @@ test("explicit authorization is evaluated independently from prompt inference", 
   assert.deepEqual(result.unauthorizedFiles, ["src/auth/session.ts"]);
 });
 
+test("module budgets turn cross-module spread into explicit authorization drift", () => {
+  const contract = createChangeContract({ maxModules: 1 });
+  const files = [
+    { path: "src/components/Button.tsx", additions: 4, deletions: 1 },
+    { path: "src/auth/session.ts", additions: 2, deletions: 1 },
+  ];
+
+  const result = evaluateChangeContract(contract, files);
+  assert.equal(result.status, "violated");
+  assert.equal(result.totals.modules, 2);
+  assert.deepEqual(
+    result.violations.map((violation) => violation.id),
+    ["module-budget-exceeded"],
+  );
+  assert.match(result.violations[0].detail, /src\/components, src\/auth/u);
+});
+
+test("module budgets use stable monorepo module names", () => {
+  const contract = createChangeContract({ maxModules: 2 });
+  const files = [
+    { path: "packages/ui/src/Button.tsx", additions: 3, deletions: 0 },
+    { path: "packages/ui/src/Card.tsx", additions: 2, deletions: 1 },
+    { path: "apps/web/src/page.tsx", additions: 5, deletions: 2 },
+  ];
+
+  const result = evaluateChangeContract(contract, files);
+  assert.equal(result.status, "compliant");
+  assert.equal(result.totals.modules, 2);
+});
+
 test("risk analysis distinguishes inferred mismatch from declared authorization drift", () => {
   const contract = createChangeContract({
     allow: "src/components/**",
@@ -42,6 +72,28 @@ test("risk analysis distinguishes inferred mismatch from declared authorization 
 
   assert.equal(analysis.contractCompliance.status, "violated");
   assert.equal(analysis.blastRadius.authorizationDrift, true);
+  assert.ok(
+    analysis.risk.factors.some((factor) => factor.id === "authorization-drift"),
+  );
+});
+
+test("module-budget violations feed the existing authorization-drift risk factor", () => {
+  const analysis = analyzeChangeSet({
+    prompt: "Refine the checkout card",
+    contract: createChangeContract({ maxModules: 1 }),
+    files: [
+      { path: "src/checkout/Card.tsx", additions: 5, deletions: 2 },
+      { path: "src/auth/session.ts", additions: 1, deletions: 1 },
+    ],
+  });
+
+  assert.equal(analysis.contractCompliance.status, "violated");
+  assert.equal(analysis.blastRadius.authorizationDrift, true);
+  assert.ok(
+    analysis.contractCompliance.violations.some(
+      (violation) => violation.id === "module-budget-exceeded",
+    ),
+  );
   assert.ok(
     analysis.risk.factors.some((factor) => factor.id === "authorization-drift"),
   );

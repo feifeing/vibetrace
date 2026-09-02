@@ -1,3 +1,5 @@
+import { moduleForPath } from "./classify.mjs";
+
 const RUNTIME_CONTRACT_ENV = "VIBETRACE_CHANGE_CONTRACT";
 
 function normalizePatterns(value) {
@@ -44,11 +46,20 @@ function finiteLimit(value) {
   return number;
 }
 
+function modulesForFiles(files) {
+  return new Set(
+    files
+      .map((file) => file.module || moduleForPath(file.path))
+      .filter(Boolean),
+  );
+}
+
 export function createChangeContract({
   allow = [],
   deny = [],
   maxFiles = null,
   maxLines = null,
+  maxModules = null,
 } = {}) {
   const contract = {
     version: 1,
@@ -57,12 +68,14 @@ export function createChangeContract({
     deny: normalizePatterns(deny),
     maxFiles: finiteLimit(maxFiles),
     maxLines: finiteLimit(maxLines),
+    maxModules: finiteLimit(maxModules),
   };
   const enabled =
     contract.allow.length > 0 ||
     contract.deny.length > 0 ||
     contract.maxFiles !== null ||
-    contract.maxLines !== null;
+    contract.maxLines !== null ||
+    contract.maxModules !== null;
   return enabled ? contract : null;
 }
 
@@ -96,6 +109,11 @@ export function runtimeChangeContract() {
 
 export function evaluateChangeContract(contract, files = []) {
   const effectiveContract = contract || runtimeChangeContract();
+  const modules = modulesForFiles(files);
+  const lines = files.reduce(
+    (sum, file) => sum + (file.additions || 0) + (file.deletions || 0),
+    0,
+  );
   if (!effectiveContract) {
     return {
       declared: false,
@@ -106,10 +124,8 @@ export function evaluateChangeContract(contract, files = []) {
       protectedFiles: [],
       totals: {
         files: files.length,
-        lines: files.reduce(
-          (sum, file) => sum + (file.additions || 0) + (file.deletions || 0),
-          0,
-        ),
+        lines,
+        modules: modules.size,
       },
     };
   }
@@ -143,12 +159,9 @@ export function evaluateChangeContract(contract, files = []) {
     });
   }
 
-  const lines = files.reduce(
-    (sum, file) => sum + (file.additions || 0) + (file.deletions || 0),
-    0,
-  );
   if (
     effectiveContract.maxFiles !== null &&
+    effectiveContract.maxFiles !== undefined &&
     files.length > effectiveContract.maxFiles
   ) {
     violations.push({
@@ -158,11 +171,22 @@ export function evaluateChangeContract(contract, files = []) {
   }
   if (
     effectiveContract.maxLines !== null &&
+    effectiveContract.maxLines !== undefined &&
     lines > effectiveContract.maxLines
   ) {
     violations.push({
       id: "line-budget-exceeded",
       detail: `${lines} lines changed; contract allows at most ${effectiveContract.maxLines}`,
+    });
+  }
+  if (
+    effectiveContract.maxModules !== null &&
+    effectiveContract.maxModules !== undefined &&
+    modules.size > effectiveContract.maxModules
+  ) {
+    violations.push({
+      id: "module-budget-exceeded",
+      detail: `${modules.size} modules changed; contract allows at most ${effectiveContract.maxModules}: ${[...modules].join(", ")}`,
     });
   }
 
@@ -173,6 +197,6 @@ export function evaluateChangeContract(contract, files = []) {
     authorizedFiles,
     unauthorizedFiles,
     protectedFiles,
-    totals: { files: files.length, lines },
+    totals: { files: files.length, lines, modules: modules.size },
   };
 }

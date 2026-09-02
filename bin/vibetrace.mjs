@@ -6,6 +6,7 @@ function contractArguments(argv) {
     "--deny",
     "--max-files",
     "--max-lines",
+    "--max-modules",
   ]);
   const clean = [];
   const values = {};
@@ -35,7 +36,7 @@ async function applyCheckpointContract(argv) {
 
   if (clean.includes("--finish") || clean.includes("--abort")) {
     throw new Error(
-      "Declare --allow/--deny/--max-files/--max-lines when starting a checkpoint, not when finishing it.",
+      "Declare --allow/--deny/--max-files/--max-lines/--max-modules when starting a checkpoint, not when finishing it.",
     );
   }
 
@@ -46,6 +47,7 @@ async function applyCheckpointContract(argv) {
     deny: values["--deny"],
     maxFiles: values["--max-files"],
     maxLines: values["--max-lines"],
+    maxModules: values["--max-modules"],
   });
   setRuntimeChangeContract(contract);
   return clean;

@@ -51,7 +51,9 @@ async function verifyVisualArtifacts(root, checkpoint) {
   for (const phase of ["before", "after"]) {
     const capture = checkpoint.visual?.[phase];
     if (!capture?.image || !capture?.imageSha256) continue;
-    const path = isAbsolute(capture.image) ? capture.image : join(root, capture.image);
+    const path = isAbsolute(capture.image)
+      ? capture.image
+      : join(root, capture.image);
     try {
       const actualSha256 = await sha256File(path);
       checks.push({
@@ -96,7 +98,9 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
     const checkpoint = resolve(await listCheckpoints(root), parsed.checkpoint);
     const receipt = verifyEvidenceReceipt(checkpoint);
     const artifacts = await verifyVisualArtifacts(root, checkpoint);
-    const artifactsValid = artifacts.every((artifact) => artifact.status === "verified");
+    const artifactsValid = artifacts.every(
+      (artifact) => artifact.status === "verified",
+    );
     const valid = receipt.valid && artifactsValid;
     const reason = !receipt.valid
       ? receipt.reason
@@ -131,7 +135,9 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
       for (const artifact of artifacts.filter(
         (candidate) => candidate.status !== "verified",
       )) {
-        stdout.write(`artifact ${artifact.phase} ${artifact.status} ${artifact.path}\n`);
+        stdout.write(
+          `artifact ${artifact.phase} ${artifact.status} ${artifact.path}\n`,
+        );
       }
     }
     return valid ? 0 : 2;

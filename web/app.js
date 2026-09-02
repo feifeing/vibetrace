@@ -333,8 +333,15 @@ const ids = [
   "toast",
 ];
 const elements = Object.fromEntries(
-  ids.map((id) => [id, document.getElementById(id)]),
+  ids.map((id) => [
+    id,
+    document.getElementById(id === "evidenceTitle" ? "evidence-title" : id),
+  ]),
 );
+for (const [name, element] of Object.entries(elements)) {
+  if (!element)
+    throw new Error(`Missing required VibeTrace UI element: ${name}`);
+}
 const orbitPositions = [
   [50, 9],
   [82, 28],

@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="VibeTrace turns every AI coding prompt into an inspectable trail of code impact, visual change, and regression risk."
+      content="VibeTrace separates what you asked, what you explicitly authorized, and what an AI coding agent actually changed — with Git and visual evidence."
     />
     <meta name="theme-color" content="#08090c" />
-    <title>VibeTrace — Time travel for vibe coding</title>
+    <title>VibeTrace — Evidence for AI code changes</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./contract.css" />
   </head>
   <body>
     <div class="ambient ambient-one" aria-hidden="true"></div>
@@ -25,7 +26,7 @@
         <span>VibeTrace</span>
         <span class="version">v0.2</span>
       </a>
-      <p class="tagline">Time travel for vibe coding.</p>
+      <p class="tagline">Evidence for AI code changes.</p>
       <div class="top-actions">
         <span class="local-status"><i></i> local evidence</span>
         <a
@@ -41,25 +42,26 @@
     <main id="main" class="page-shell">
       <section class="intro" aria-labelledby="page-title">
         <div>
-          <p class="eyebrow"><span></span> SESSION 07 · PROMPT FORENSICS</p>
-          <h1 id="page-title">Every prompt leaves a trace.</h1>
+          <p class="eyebrow"><span></span> SESSION 07 · CHANGE EVIDENCE</p>
+          <h1 id="page-title">Know what was asked. Know what was allowed. See what changed.</h1>
         </div>
         <p class="intro-copy">
-          See what you asked, what the agent touched, what moved on screen, and
-          why the change deserves review.
+          VibeTrace keeps inferred intent, explicit authorization, and observed
+          code/visual effects separate — then records the evidence in a
+          verifiable local receipt.
         </p>
       </section>
 
       <section class="trace-flow" aria-label="VibeTrace evidence chain">
-        <span class="flow-step active">01 <b>Prompt intent</b></span
+        <span class="flow-step active">01 <b>Asked</b></span
         ><i aria-hidden="true"></i>
-        <span class="flow-step">02 <b>Code change</b></span
+        <span class="flow-step">02 <b>Authorized</b></span
         ><i aria-hidden="true"></i>
-        <span class="flow-step">03 <b>Blast radius</b></span
+        <span class="flow-step">03 <b>Observed</b></span
         ><i aria-hidden="true"></i>
-        <span class="flow-step">04 <b>Visual evidence</b></span
+        <span class="flow-step">04 <b>Evidence</b></span
         ><i aria-hidden="true"></i>
-        <span class="flow-step">05 <b>Risk / replay</b></span>
+        <span class="flow-step">05 <b>Receipt</b></span>
       </section>
 
       <section class="workspace" aria-label="VibeTrace session report">
@@ -178,8 +180,8 @@
           <section class="blast-section" aria-labelledby="blast-title">
             <div class="panel-heading compact">
               <div>
-                <p class="section-label">WHAT THE AGENT TOUCHED</p>
-                <h2 id="blast-title">Blast radius</h2>
+                <p class="section-label">WHAT ACTUALLY CHANGED</p>
+                <h2 id="blast-title">Observed blast radius</h2>
               </div>
               <span id="blastLevel" class="severity"></span>
             </div>
@@ -198,7 +200,7 @@
           <section class="risk-section" aria-labelledby="risk-title">
             <div class="risk-heading">
               <div>
-                <p class="section-label">WHY IT MAY BE RISKY</p>
+                <p class="section-label">WHY IT DESERVES REVIEW</p>
                 <h2 id="risk-title">Explainable risk</h2>
               </div>
               <div class="risk-score">
@@ -218,8 +220,8 @@
       <section class="command-strip" aria-label="VibeTrace quick start">
         <span class="terminal-dot">›_</span>
         <code
-          >vibetrace checkpoint --prompt "Make the hero cinematic" --url
-          http://localhost:3000</code
+          >vibetrace checkpoint --prompt "Change the button color" --allow
+          "src/components/**,src/styles/**" --deny "src/auth/**" --max-files 3</code
         >
         <button id="copyCommand" type="button">Copy command</button>
       </section>
@@ -227,5 +229,6 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script type="module" src="./app.js"></script>
+    <script type="module" src="./contract-ui.js"></script>
   </body>
 </html>

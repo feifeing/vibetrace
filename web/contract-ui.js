@@ -4,7 +4,9 @@ const impactPanel = document.querySelector(".impact-panel");
 const riskSection = document.querySelector(".risk-section");
 
 if (!checkpointId || !impactPanel || !riskSection) {
-  throw new Error("VibeTrace authorization UI could not find its host elements.");
+  throw new Error(
+    "VibeTrace authorization UI could not find its host elements.",
+  );
 }
 
 const demoAuthorization = {
@@ -20,7 +22,10 @@ const demoAuthorization = {
         declared: true,
         status: "violated",
         violations: [
-          { detail: "Protected auth/router paths changed and the 3-file budget was exceeded." },
+          {
+            detail:
+              "Protected auth/router paths changed and the 3-file budget was exceeded.",
+          },
         ],
       },
     },
@@ -172,6 +177,10 @@ function replaceQuickStartCopy() {
 }
 
 const observer = new MutationObserver(renderAuthorization);
-observer.observe(checkpointId, { childList: true, characterData: true, subtree: true });
+observer.observe(checkpointId, {
+  childList: true,
+  characterData: true,
+  subtree: true,
+});
 renderAuthorization();
 replaceQuickStartCopy();

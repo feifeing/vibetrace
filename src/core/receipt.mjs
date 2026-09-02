@@ -16,10 +16,9 @@ function sha256(value) {
     .digest("hex");
 }
 
-export function createEvidenceReceipt(checkpoint) {
+function evidenceForCheckpoint(checkpoint) {
   if (!checkpoint?.before?.commit || !checkpoint?.after?.commit) return null;
-
-  const evidence = {
+  return {
     version: 1,
     checkpointId: checkpoint.id,
     sessionId: checkpoint.sessionId,
@@ -53,10 +52,43 @@ export function createEvidenceReceipt(checkpoint) {
         }
       : null,
   };
+}
 
+export function createEvidenceReceipt(checkpoint) {
+  const evidence = evidenceForCheckpoint(checkpoint);
+  if (!evidence) return null;
   return {
     algorithm: "sha256",
     receiptId: `vtr_${sha256(evidence).slice(0, 24)}`,
     evidence,
+  };
+}
+
+export function verifyEvidenceReceipt(checkpoint) {
+  const stored = checkpoint?.receipt;
+  const recomputed = createEvidenceReceipt(checkpoint);
+  if (!stored || !recomputed) {
+    return {
+      valid: false,
+      reason: "missing-receipt",
+      expectedReceiptId: recomputed?.receiptId || null,
+      actualReceiptId: stored?.receiptId || null,
+    };
+  }
+  if (stored.algorithm !== "sha256") {
+    return {
+      valid: false,
+      reason: "unsupported-algorithm",
+      expectedReceiptId: recomputed.receiptId,
+      actualReceiptId: stored.receiptId || null,
+    };
+  }
+  const idMatches = stored.receiptId === recomputed.receiptId;
+  const evidenceMatches = sha256(stored.evidence) === sha256(recomputed.evidence);
+  return {
+    valid: idMatches && evidenceMatches,
+    reason: idMatches && evidenceMatches ? "verified" : "evidence-mismatch",
+    expectedReceiptId: recomputed.receiptId,
+    actualReceiptId: stored.receiptId || null,
   };
 }

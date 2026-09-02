@@ -27,14 +27,14 @@ vibetrace checkpoint \
   --max-modules 1
 ```
 
-| Rule | Meaning |
-| --- | --- |
-| `--allow <glob,...>` | If present, every changed path must match at least one allowed glob. |
-| `--deny <glob,...>` | Matching paths are explicitly protected even if an allow rule also matches. |
-| `--protect-surface <name,...>` | Files classified into the selected sensitive surfaces are protected. |
-| `--max-files <n>` | The change may modify at most `n` files. |
-| `--max-lines <n>` | Total additions + deletions may not exceed `n`. |
-| `--max-modules <n>` | The change may span at most `n` deterministically classified repository modules. |
+| Rule                           | Meaning                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `--allow <glob,...>`           | If present, every changed path must match at least one allowed glob.             |
+| `--deny <glob,...>`            | Matching paths are explicitly protected even if an allow rule also matches.      |
+| `--protect-surface <name,...>` | Files classified into the selected sensitive surfaces are protected.             |
+| `--max-files <n>`              | The change may modify at most `n` files.                                         |
+| `--max-lines <n>`              | Total additions + deletions may not exceed `n`.                                  |
+| `--max-modules <n>`            | The change may span at most `n` deterministically classified repository modules. |
 
 All numeric limits are non-negative integers. A limit of `0` is valid and means no matching change is authorized under that budget.
 

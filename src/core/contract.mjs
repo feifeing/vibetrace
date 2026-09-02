@@ -20,13 +20,16 @@ function normalizePatterns(value) {
 
 function normalizeSurfaces(value) {
   const surfaces = normalizePatterns(value).map((item) => item.toLowerCase());
-  const unknown = surfaces.filter((surface) => !PROTECTABLE_SURFACES.has(surface));
+  const unknown = surfaces.filter(
+    (surface) => !PROTECTABLE_SURFACES.has(surface),
+  );
   if (unknown.length > 0) {
     throw new Error(
       `Unknown protected surface(s): ${unknown.join(", ")}. Supported surfaces: ${[...PROTECTABLE_SURFACES].join(", ")}.`,
     );
   }
-  return [...new Set(surfaces)];
+  const selected = new Set(surfaces);
+  return [...PROTECTABLE_SURFACES].filter((surface) => selected.has(surface));
 }
 
 function escapeRegex(value) {
@@ -172,7 +175,9 @@ export function evaluateChangeContract(contract, files = []) {
     const allowed =
       !allowIsRestrictive || matchesAny(path, effectiveContract.allow);
     const signals = file.signals || classifyFile(path).signals;
-    const matchedSurfaces = signals.filter((signal) => protectedSurfaces.has(signal));
+    const matchedSurfaces = signals.filter((signal) =>
+      protectedSurfaces.has(signal),
+    );
 
     if (denied) {
       pathProtectedFiles.push(path);
@@ -183,11 +188,13 @@ export function evaluateChangeContract(contract, files = []) {
       protectedFiles.add(path);
       protectedSurfaceFiles.add(path);
       for (const surface of matchedSurfaces) {
-        if (!protectedSurfaceHits.has(surface)) protectedSurfaceHits.set(surface, []);
+        if (!protectedSurfaceHits.has(surface))
+          protectedSurfaceHits.set(surface, []);
         protectedSurfaceHits.get(surface).push(path);
       }
     }
-    if (!denied && allowed && matchedSurfaces.length === 0) authorizedFiles.push(path);
+    if (!denied && allowed && matchedSurfaces.length === 0)
+      authorizedFiles.push(path);
   }
 
   if (pathProtectedFiles.length > 0) {
@@ -196,13 +203,19 @@ export function evaluateChangeContract(contract, files = []) {
       detail: `${pathProtectedFiles.length} protected path(s) changed: ${pathProtectedFiles.join(", ")}`,
     });
   }
-  if (protectedSurfaceHits.size > 0) {
-    const detail = [...protectedSurfaceHits.entries()]
-      .map(([surface, paths]) => `${surface}: ${paths.join(", ")}`)
+  const touchedSurfaces = [...PROTECTABLE_SURFACES].filter((surface) =>
+    protectedSurfaceHits.has(surface),
+  );
+  if (touchedSurfaces.length > 0) {
+    const detail = touchedSurfaces
+      .map(
+        (surface) =>
+          `${surface}: ${protectedSurfaceHits.get(surface).slice().sort().join(", ")}`,
+      )
       .join("; ");
     violations.push({
       id: "protected-surface-touched",
-      detail: `${protectedSurfaceHits.size} protected surface(s) changed: ${detail}`,
+      detail: `${touchedSurfaces.length} protected surface(s) changed: ${detail}`,
     });
   }
   if (unauthorizedFiles.length > 0) {
@@ -249,9 +262,9 @@ export function evaluateChangeContract(contract, files = []) {
     violations,
     authorizedFiles,
     unauthorizedFiles,
-    protectedFiles: [...protectedFiles],
-    protectedSurfaceFiles: [...protectedSurfaceFiles],
-    protectedSurfacesTouched: [...protectedSurfaceHits.keys()],
+    protectedFiles: [...protectedFiles].sort(),
+    protectedSurfaceFiles: [...protectedSurfaceFiles].sort(),
+    protectedSurfacesTouched: touchedSurfaces,
     totals: { files: files.length, lines, modules: modules.size },
   };
 }

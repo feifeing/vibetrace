@@ -43,6 +43,17 @@ export async function applyRestore(root, plan) {
     );
   }
 
+  const current = await createWorktreeSnapshot(
+    root,
+    `${plan.checkpointId} pre-apply restore guard`,
+  );
+  const lateDrift = collectCommitDiff(root, plan.from, current.commit);
+  if (lateDrift.length > 0) {
+    throw new Error(
+      "Restore is blocked because the worktree changed after the restore plan was created.",
+    );
+  }
+
   const temporaryDirectory = await mkdtemp(
     join(tmpdir(), "vibetrace-restore-"),
   );
@@ -51,7 +62,7 @@ export async function applyRestore(root, plan) {
 
   try {
     runGit(root, ["read-tree", plan.from], { env });
-    runGit(root, ["read-tree", "-u", plan.to], { env });
+    runGit(root, ["read-tree", "--reset", "-u", plan.to], { env });
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true });
   }

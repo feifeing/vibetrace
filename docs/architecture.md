@@ -13,7 +13,7 @@ VibeTrace v0.2 is deliberately a small local CLI plus a standalone report. Its a
 7. A no-op one-step checkpoint is rejected.
 8. The browser report renders stored analysis; it does not silently rescore it.
 9. Restore is dry-run by default and must refuse to overwrite post-checkpoint drift.
-10. An applied restore must leave `HEAD` and the real Git index unchanged and verify the resulting worktree against the recorded before-state.
+10. An applied restore must leave `HEAD` and the real Git index unchanged and verify the resulting worktree is Git-equivalent to the recorded before-state.
 
 ## Three-layer evidence model
 
@@ -131,8 +131,10 @@ When the guard passes, `src/git/restore.mjs`:
 2. loads the checkpoint after-state into that index;
 3. runs `git read-tree --reset -u <before>` through the temporary index so the worktree is transformed from the recorded after-state to the recorded before-state;
 4. removes the temporary index;
-5. snapshots the resulting worktree and requires an exact match with the checkpoint before-state; and
+5. snapshots the resulting worktree and requires a Git-object-equivalent match with the checkpoint before-state; and
 6. verifies that the real `HEAD` and real index tree are unchanged.
+
+Git checkout semantics may materialize platform-specific worktree bytes such as CRLF line endings when `core.autocrlf` or attributes require them. Restore verification therefore proves equivalence after Git's normal clean/filter rules, not cross-platform byte-for-byte identity of working-tree files.
 
 This design also handles files created by the checkpoint: because they are tracked by the temporary after-state index, a guarded restore can remove them without treating unrelated later untracked files as disposable.
 

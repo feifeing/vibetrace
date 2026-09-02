@@ -46,6 +46,11 @@ test("the mobile layout does not create page-level horizontal overflow", async (
       document.documentElement.clientWidth,
   );
   expect(overflow).toBeLessThanOrEqual(1);
+  await mkdir("test-results", { recursive: true });
+  await page.screenshot({
+    path: "test-results/vibetrace-mobile.png",
+    fullPage: true,
+  });
 });
 
 test("capture the README dashboard at a real desktop viewport", async ({

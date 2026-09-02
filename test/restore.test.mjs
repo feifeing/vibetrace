@@ -27,7 +27,11 @@ async function makeCheckpoint(root) {
   run(root, ["init"]);
   run(root, ["checkpoint", "--prompt", "Change the app value"]);
   await writeFile(join(root, "app.js"), "export const value = 2;\n", "utf8");
-  await writeFile(join(root, "generated.js"), "export const generated = true;\n", "utf8");
+  await writeFile(
+    join(root, "generated.js"),
+    "export const generated = true;\n",
+    "utf8",
+  );
   run(root, ["checkpoint", "--finish"]);
 }
 
@@ -41,12 +45,18 @@ test("restore is dry-run by default and apply restores the exact before worktree
 
   const preview = run(root, ["restore"]);
   assert.match(preview, /dry-run only/u);
-  assert.equal(await readFile(join(root, "app.js"), "utf8"), "export const value = 2;\n");
+  assert.equal(
+    await readFile(join(root, "app.js"), "utf8"),
+    "export const value = 2;\n",
+  );
   await access(join(root, "generated.js"));
 
   const applied = run(root, ["restore", "--apply"]);
   assert.match(applied, /HEAD and index unchanged/u);
-  assert.equal(await readFile(join(root, "app.js"), "utf8"), "export const value = 1;\n");
+  assert.equal(
+    await readFile(join(root, "app.js"), "utf8"),
+    "export const value = 1;\n",
+  );
   await assert.rejects(access(join(root, "generated.js")), { code: "ENOENT" });
   assert.equal(git(root, ["rev-parse", "HEAD"]), headBefore);
   assert.equal(git(root, ["write-tree"]), indexBefore);
@@ -62,5 +72,8 @@ test("restore blocks when the worktree drifted after checkpoint completion", asy
 
   assert.equal(result.status, 2);
   assert.match(result.stdout, /BLOCKED BY DRIFT/u);
-  assert.equal(await readFile(join(root, "app.js"), "utf8"), "export const value = 3;\n");
+  assert.equal(
+    await readFile(join(root, "app.js"), "utf8"),
+    "export const value = 3;\n",
+  );
 });

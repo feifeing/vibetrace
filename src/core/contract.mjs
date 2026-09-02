@@ -48,7 +48,9 @@ function finiteLimit(value) {
 
 function modulesForFiles(files) {
   return new Set(
-    files.map((file) => file.module || moduleForPath(file.path)).filter(Boolean),
+    files
+      .map((file) => file.module || moduleForPath(file.path))
+      .filter(Boolean),
   );
 }
 

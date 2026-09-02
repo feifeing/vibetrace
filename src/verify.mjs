@@ -166,7 +166,9 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
       stdout.write(`verified ${checkpoint.id}\n`);
       stdout.write(`receipt  ${receipt.actualReceiptId}\n`);
       if (gitEvidence.length > 0)
-        stdout.write(`git      ${gitEvidence.length} snapshot ref(s) verified\n`);
+        stdout.write(
+          `git      ${gitEvidence.length} snapshot ref(s) verified\n`,
+        );
       if (artifacts.length > 0)
         stdout.write(`artifacts ${artifacts.length} visual file(s) verified\n`);
       stdout.write("evidence matches the stored receipt\n");

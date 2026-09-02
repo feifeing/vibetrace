@@ -6,7 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCli = process.env.npm_execpath;
 const git = process.platform === "win32" ? "git.exe" : "git";
 
 function run(command, args, options = {}) {
@@ -15,6 +15,13 @@ function run(command, args, options = {}) {
     stdio: ["ignore", "pipe", "pipe"],
     ...options,
   }).trim();
+}
+
+function runNpm(args, options = {}) {
+  if (!npmCli) {
+    throw new Error("Package smoke requires npm_execpath from an npm-run context.");
+  }
+  return run(process.execPath, [npmCli, ...args], options);
 }
 
 function runCli(cli, cwd, args) {
@@ -30,7 +37,7 @@ try {
   const packDirectory = join(temporaryRoot, "pack");
   await mkdir(packDirectory, { recursive: true });
   const packOutput = JSON.parse(
-    run(npm, ["pack", "--json", "--pack-destination", packDirectory], {
+    runNpm(["pack", "--json", "--pack-destination", packDirectory], {
       cwd: root,
     }),
   );
@@ -77,8 +84,7 @@ try {
     ),
     "utf8",
   );
-  run(
-    npm,
+  runNpm(
     [
       "install",
       "--ignore-scripts",

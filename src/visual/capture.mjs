@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 async function loadPlaywright() {
@@ -105,6 +105,9 @@ export async function capturePage({
       fullPage: true,
       animations: "disabled",
     });
+    const imageSha256 = createHash("sha256")
+      .update(await readFile(outputPath))
+      .digest("hex");
 
     return {
       url: page.url(),
@@ -112,6 +115,7 @@ export async function capturePage({
       capturedAt: new Date().toISOString(),
       viewport,
       image: outputPath,
+      imageSha256,
       dom: {
         hash: createHash("sha256").update(html).digest("hex").slice(0, 20),
         nodeCount: layout.length,

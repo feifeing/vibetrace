@@ -89,7 +89,7 @@ test("two-phase CLI creates a readable checkpoint and rejects an empty finish", 
   assert.equal(checkpoints[0].analysis.files.length, 2);
   assert.equal(
     checkpoints[0].analysis.risk.model,
-    "vibetrace-explainable-risk-v1",
+    "vibetrace-evidence-risk-v2",
   );
   const raw = JSON.parse(
     await readFile(

@@ -33,6 +33,10 @@ function runCli(cli, cwd, args) {
   });
 }
 
+function normalizeTextForGitComparison(value) {
+  return value.replaceAll("\r\n", "\n");
+}
+
 const temporaryRoot = await mkdtemp(join(tmpdir(), "vibetrace-package-smoke-"));
 
 try {
@@ -139,9 +143,11 @@ try {
   assert.equal(JSON.parse(preview).canApply, true);
   runCli(cli, project, ["restore", "--apply"]);
   assert.equal(
-    await readFile(join(project, "app.js"), "utf8"),
+    normalizeTextForGitComparison(
+      await readFile(join(project, "app.js"), "utf8"),
+    ),
     "export const value = 1;\n",
-    "packed CLI should restore the checkpoint without dev dependencies",
+    "packed CLI should restore the Git-equivalent checkpoint state without dev dependencies",
   );
 
   console.log(

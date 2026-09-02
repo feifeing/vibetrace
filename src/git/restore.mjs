@@ -10,8 +10,15 @@ export async function inspectRestore(root, checkpoint) {
     throw new Error("Only completed checkpoints can be restored.");
   }
 
-  const current = await createWorktreeSnapshot(root, `${checkpoint.id} restore guard`);
-  const drift = collectCommitDiff(root, checkpoint.after.commit, current.commit);
+  const current = await createWorktreeSnapshot(
+    root,
+    `${checkpoint.id} restore guard`,
+  );
+  const drift = collectCommitDiff(
+    root,
+    checkpoint.after.commit,
+    current.commit,
+  );
   const restore = collectCommitDiff(
     root,
     checkpoint.after.commit,
@@ -36,7 +43,9 @@ export async function applyRestore(root, plan) {
     );
   }
 
-  const temporaryDirectory = await mkdtemp(join(tmpdir(), "vibetrace-restore-"));
+  const temporaryDirectory = await mkdtemp(
+    join(tmpdir(), "vibetrace-restore-"),
+  );
   const temporaryIndex = join(temporaryDirectory, "index");
   const env = { GIT_INDEX_FILE: temporaryIndex };
 

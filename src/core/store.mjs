@@ -9,6 +9,11 @@ import {
 import { isAbsolute, join, resolve } from "node:path";
 import { CONFIG_SCHEMA_VERSION, assertValidCheckpoint } from "./schema.mjs";
 import { createId } from "./id.mjs";
+import {
+  runtimeChangeContract,
+  setRuntimeChangeContract,
+} from "./contract.mjs";
+import { createEvidenceReceipt } from "./receipt.mjs";
 import { runGit } from "../git/git.mjs";
 
 export function storePaths(root) {
@@ -146,6 +151,17 @@ export async function loadSession(root, id) {
 }
 
 export async function saveCheckpoint(root, checkpoint) {
+  if (!checkpoint.authorization) {
+    checkpoint.authorization = runtimeChangeContract();
+  }
+  if (
+    checkpoint.status === "completed" &&
+    checkpoint.before?.commit &&
+    checkpoint.after?.commit &&
+    checkpoint.analysis
+  ) {
+    checkpoint.receipt = createEvidenceReceipt(checkpoint);
+  }
   assertValidCheckpoint(checkpoint);
   const paths = storePaths(root);
   await mkdir(paths.checkpoints, { recursive: true });
@@ -160,7 +176,9 @@ export async function loadCheckpoint(root, id) {
     join(storePaths(root).checkpoints, `${id}.json`),
   );
   if (!checkpoint) throw new Error(`Checkpoint ${id} was not found.`);
-  return assertValidCheckpoint(checkpoint);
+  const validated = assertValidCheckpoint(checkpoint);
+  setRuntimeChangeContract(validated.authorization || null);
+  return validated;
 }
 
 export async function deleteCheckpoint(root, id) {

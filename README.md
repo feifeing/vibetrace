@@ -4,8 +4,8 @@
 
 <h1 align="center">VibeTrace</h1>
 
-<p align="center"><strong>Time travel for vibe coding.</strong></p>
-<p align="center">See exactly what every AI prompt did to your website.</p>
+<p align="center"><strong>Time travel for vibe coding — with an authorization boundary.</strong></p>
+<p align="center">See what you asked, what you allowed, and what the coding agent actually changed.</p>
 
 <p align="center">
   <a href="https://github.com/feifeing/vibetrace/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/feifeing/vibetrace/actions/workflows/ci.yml/badge.svg" /></a>
@@ -13,30 +13,109 @@
   <img alt="Node 20+" src="https://img.shields.io/badge/node-%3E%3D20-9a7cff.svg" />
 </p>
 
-![VibeTrace prompt timeline, visual replay, and blast-radius report](docs/vibetrace-dashboard.png)
+![VibeTrace dashboard showing prompt intent, authorization drift, visual evidence, and blast radius](docs/vibetrace-dashboard.png)
 
-AI coding tools are excellent at changing code. They are much worse at answering the question that follows:
+AI coding tools are very good at making changes. The difficult part is proving whether the resulting change stayed inside the boundary you intended to give them.
 
 > “I asked for a button color. Why did the agent touch routing, auth, and twelve files?”
 
-VibeTrace records a prompt-aware before state, captures the after state, then connects intent to evidence:
-
-**Prompt Intent → Code Change → Blast Radius → Visual Change → Regression Risk → Replay / Restore**
-
-It is local-first, agent-agnostic, and deliberately explainable. VibeTrace does not generate code, replace Git, or invent an opaque “AI confidence” score.
-
-## The killer feature: intent-aware Blast Radius
-
-File count alone cannot tell you whether a change is suspicious. VibeTrace first infers a conservative expected scope using inspectable keyword rules, then compares it with what Git actually observed.
+VibeTrace treats three things as different evidence:
 
 ```text
-Prompt:  “Change the primary button color”
-Intent:  styles + UI · small scope · about 1–3 files
-Actual:  12 files · 6 modules · routing + auth + dependencies touched
-Result:  CRITICAL BLAST RADIUS · explicit intent mismatch
+What you asked       → inferred intent
+What you authorized  → explicit change contract
+What happened        → Git + visual evidence
 ```
 
-Every point in the risk score has a visible reason: file count, changed lines, directory/module spread, sensitive areas, dependency changes, public APIs, global styles, large-refactor shape, or prompt/change mismatch.
+That distinction matters. A prompt can be ambiguous; an explicit authorization boundary is not.
+
+VibeTrace is local-first, agent-agnostic, Git-compatible, and deliberately explainable. It does not generate code, replace Git, or hide review decisions behind an opaque AI confidence score.
+
+## The core contribution
+
+Many existing tools already provide checkpoints, diffs, risk scoring, prompt history, path allowlists, visual regression, or blast-radius analysis. VibeTrace does **not** claim those primitives as inventions.
+
+Its current technical contribution is the evidence model that keeps these layers separate:
+
+**Prompt Intent → Explicit Authorization → Observed Effect → Evidence Receipt**
+
+This enables two different questions to be answered independently:
+
+- **Intent mismatch:** did the observed change look broader than the prompt implied?
+- **Authorization drift:** did the observed change cross a boundary the user explicitly declared?
+
+The second is stronger evidence because it is based on permission, not language inference.
+
+A completed checkpoint can also produce a deterministic SHA-256 **Evidence Receipt** binding the prompt hash, declared contract, Git before/after objects, analysis, and available visual hashes. The receipt is an integrity record — not an authorship signature and not a claim that the code is semantically correct.
+
+## A practical example
+
+Start a checkpoint before the coding agent edits:
+
+```bash
+vibetrace checkpoint \
+  --prompt "Change the primary button color" \
+  --allow "src/components/**,src/styles/**" \
+  --deny "src/auth/**,src/router/**" \
+  --max-files 3 \
+  --max-lines 80
+```
+
+Let the agent work, then inspect and finish:
+
+```bash
+vibetrace diff
+vibetrace checkpoint --finish
+vibetrace report --open
+```
+
+If the agent actually changes:
+
+```text
+src/components/Button.tsx
+src/styles/globals.css
+src/auth/session.ts
+src/router/index.ts
+package.json
+...
+```
+
+VibeTrace can report:
+
+```text
+Prompt intent        UI/styles · likely small
+Declared contract    components/styles allowed
+                     auth/router protected
+                     ≤ 3 files · ≤ 80 changed lines
+Observed effect      12 files · 6 modules
+Intent mismatch      detected
+Authorization drift  detected
+Evidence receipt     vtr_…
+```
+
+No extra model is required to decide that `src/auth/**` violated an explicit `--deny` rule.
+
+## Why this is useful
+
+### Review AI changes without guessing
+
+Normal Git diff answers **what changed**. VibeTrace adds the missing context: **what was requested and what was explicitly permitted**.
+
+### Put hard boundaries around soft prompts
+
+Natural language is fuzzy. A change contract turns “just tweak the hero” into auditable constraints such as allowed paths, protected paths, file budgets, and line budgets.
+
+### Preserve evidence without disturbing developer work
+
+VibeTrace creates before/after snapshots with a temporary Git index and local Git objects. It does not move `HEAD`, stash the worktree, or replace the real index.
+
+### See visual side effects next to code effects
+
+With the optional Playwright adapter, checkpoints can capture before/after screenshots plus basic pixel, layout, and DOM evidence.
+
+### Keep the reasoning inspectable
+
+Blast Radius and risk are deterministic review heuristics. Every point maps to a visible reason such as file spread, sensitive areas, line churn, prompt mismatch, or authorization drift.
 
 ## Try the interface
 
@@ -47,11 +126,13 @@ npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:4173](http://127.0.0.1:4173). The included report uses realistic fixture data so the product language is understandable before any setup.
+Open [http://127.0.0.1:4173](http://127.0.0.1:4173).
 
-## Trace a real AI change
+The demo makes the evidence chain visible as:
 
-Install the repository CLI locally:
+**Asked → Authorized → Observed → Evidence → Receipt**
+
+## Install the repository CLI locally
 
 ```bash
 npm link
@@ -59,157 +140,220 @@ cd /path/to/your-project
 vibetrace init
 ```
 
-Start the checkpoint **before** the agent edits:
+A normal checkpoint does not require a contract:
 
 ```bash
 vibetrace checkpoint --prompt "Make the hero cinematic"
 ```
 
-Let your AI tool make the change, preview the live impact, and finish:
+A guarded checkpoint adds explicit authorization:
 
 ```bash
-vibetrace diff
-vibetrace checkpoint --finish
-vibetrace report --open
+vibetrace checkpoint \
+  --prompt "Make the hero cinematic" \
+  --allow "src/marketing/**,src/styles/**" \
+  --deny "src/auth/**,infra/**" \
+  --max-files 5
 ```
 
-For an existing worktree change, use the safe one-step form:
+The contract is stored with the recording checkpoint. `vibetrace checkpoint --finish` restores that same authorization context even when it runs later in a separate process, evaluates the final change against it, and stores the resulting Evidence Receipt with the completed checkpoint.
+
+For an existing worktree change:
 
 ```bash
-vibetrace checkpoint --prompt "Describe the change that just happened" --from-head
+vibetrace checkpoint \
+  --prompt "Describe the change that just happened" \
+  --allow "src/ui/**" \
+  --from-head
 ```
 
-If the worktree is unchanged, the one-step command refuses to create a meaningless checkpoint.
+A clean worktree is rejected instead of generating a meaningless checkpoint.
 
-### Optional visual evidence
+## One-shot attestation
 
-Install the pinned Chromium runtime once, keep the website running, then attach its URL when starting the checkpoint:
+For CI scripts or an existing set of changes, use the standalone attestation command:
+
+```bash
+vibetrace attest \
+  --prompt "Change the button color" \
+  --allow "src/components/**,src/styles/**" \
+  --deny "src/auth/**" \
+  --max-files 3 \
+  --max-lines 80
+```
+
+`vibetrace attest` exits with status `2` when an explicit contract is violated. This makes it script-friendly without pretending to be an autonomous semantic policy engine.
+
+## Optional visual evidence
+
+Install Chromium once:
 
 ```bash
 npx playwright install chromium
 ```
 
+Keep the application running and start the checkpoint with a URL:
+
 ```bash
 vibetrace checkpoint \
-  --prompt "Make the hero cinematic" \
+  --prompt "Refine the checkout summary" \
+  --allow "src/checkout/**,src/styles/**" \
+  --deny "src/auth/**" \
   --url http://localhost:3000
 
-# AI edits the code; your dev server reloads
+# agent edits; dev server reloads
 vibetrace checkpoint --finish
 vibetrace report --open
 ```
 
-Playwright records the same Chromium viewport before and after. VibeTrace v0.2 reports only what it can measure:
+Each captured PNG is SHA-256 hashed so the artifact can participate in the Evidence Receipt.
 
-| Layer               | v0.2 support | Meaning                                                  |
-| ------------------- | ------------ | -------------------------------------------------------- |
-| Pixel difference    | Yes          | Thresholded RGBA pixels changed                          |
-| Layout change       | Basic        | Visible elements added, removed, moved, or resized       |
-| DOM change          | Basic        | DOM fingerprint and visible-node delta                   |
-| Semantic regression | **No**       | VibeTrace does not claim the change is correct or broken |
+| Evidence layer       | v0.2 support | What it means                                |
+| -------------------- | ------------ | -------------------------------------------- |
+| Git objects          | Yes          | Stable before/after repository evidence      |
+| File + line scope    | Yes          | Normalized changed paths and churn           |
+| Contract compliance  | Yes          | Explicit authorization drift                 |
+| Pixel difference     | Yes          | Thresholded RGBA difference                  |
+| Layout change        | Basic        | Visible elements moved/resized/added/removed |
+| DOM change           | Basic        | DOM fingerprint + visible-node delta         |
+| Semantic correctness | **No**       | Requires stronger assertions or human review |
 
-Browser rendering can vary by OS, browser build, fonts, and hardware. Compare captures from the same environment for meaningful results.
+Browser output can vary by OS, browser build, fonts, and hardware. Compare visual captures from the same environment.
 
 ## CLI
 
-| Command                                         | What it does                                                        |
-| ----------------------------------------------- | ------------------------------------------------------------------- |
-| `vibetrace init`                                | Creates local state and adds `/.vibetrace/` to `.git/info/exclude`  |
-| `vibetrace checkpoint --prompt "…"`             | Records a before snapshot and opens a prompt-aware checkpoint       |
-| `vibetrace checkpoint --finish`                 | Records the after snapshot, analyzes it, and closes the checkpoint  |
-| `vibetrace checkpoint --abort`                  | Removes the active checkpoint metadata, artifacts, and private refs |
-| `vibetrace checkpoint --prompt "…" --from-head` | Captures existing changes relative to `HEAD`                        |
-| `vibetrace diff [id]`                           | Shows the live or saved change map, Blast Radius, and risk factors  |
-| `vibetrace diff --scope staged\|unstaged\|all`  | Normalizes a specific Git change source                             |
-| `vibetrace diff --json`                         | Emits analysis for agents and future integrations                   |
-| `vibetrace replay`                              | Replays the prompt timeline for the current session                 |
-| `vibetrace session new --name "…"`              | Starts a separate prompt timeline without touching Git history      |
-| `vibetrace report [id]`                         | Generates a standalone local visual report                          |
+| Command                                 | What it does                                                  |
+| --------------------------------------- | ------------------------------------------------------------- |
+| `vibetrace init`                        | Initializes local VibeTrace state                             |
+| `vibetrace checkpoint --prompt "…"`     | Starts a two-phase before/after checkpoint                    |
+| `vibetrace checkpoint … --allow/--deny` | Starts a checkpoint with an explicit change contract          |
+| `vibetrace checkpoint --finish`         | Captures after state, evaluates evidence, stores a receipt    |
+| `vibetrace checkpoint --abort`          | Removes active checkpoint metadata/artifacts/private refs     |
+| `vibetrace diff [id]`                   | Shows live or saved Blast Radius and review evidence          |
+| `vibetrace diff --json`                 | Emits machine-readable analysis                               |
+| `vibetrace attest …`                    | Verifies current worktree changes against a declared contract |
+| `vibetrace replay`                      | Replays the current session timeline                          |
+| `vibetrace session new --name "…"`      | Starts a separate evidence timeline                           |
+| `vibetrace report [id]`                 | Generates a standalone local report                           |
 
-Run `vibetrace --help` for all options.
+Change-contract options:
 
-## How checkpoints work
+```text
+--allow <glob,...>    paths the change may touch
+--deny <glob,...>     protected paths the change must not touch
+--max-files <n>       maximum changed-file budget
+--max-lines <n>       maximum inserted + deleted line budget
+```
 
-VibeTrace does **not** commit to your branch, stash your work, or replace the real index. It builds each snapshot with a temporary Git index, writes a local Git tree/commit object, and anchors it under:
+## How checkpoints avoid mutating your work
+
+For a worktree snapshot VibeTrace:
+
+1. creates a temporary Git index outside the repository;
+2. loads `HEAD` into that index;
+3. stages the current worktree into the temporary index;
+4. writes a Git tree and local commit object;
+5. deletes the temporary index; and
+6. anchors evidence beneath private refs such as:
 
 ```text
 refs/vibetrace/checkpoints/<id>/before
 refs/vibetrace/checkpoints/<id>/after
 ```
 
-This captures tracked, staged, unstaged, renamed, deleted, and untracked non-ignored files without moving `HEAD`. Checkpoint JSON remains human-readable in `.vibetrace/checkpoints/`.
+The real index, branch, and worktree are not rewritten by checkpoint capture.
 
-The refs establish a reliable rollback foundation. A guarded one-command restore is intentionally still on the roadmap: v0.2 will not overwrite a developer's later work merely to advertise a “restore” button.
+## Explainable analysis
 
-See [the architecture and data model](docs/architecture.md) for module boundaries and invariants.
-
-## Risk model
-
-The deterministic `vibetrace-explainable-risk-v1` model is a review prioritizer, not a probability of failure.
+The current deterministic model separates breadth from review priority:
 
 ```text
-risk = file scope
+Blast Radius = observed scope
+             + module/directory spread
+             + sensitive surfaces
+             + intent mismatch
+             + authorization drift
+
+Risk = file scope
      + line churn
-     + directory/module spread
      + sensitive-area weights
-     + large-refactor shape
      + prompt/change mismatch
-     + unexpected visual movement (when captured)
+     + explicit authorization drift
+     + large-refactor shape
+     + unexpected visual movement
 ```
 
-Each contribution is capped, stored in the checkpoint, printed by the CLI, and rendered beside the report. The engine lives independently from Git parsing and UI code so a future model can replace it without changing the schema contract.
+`Intent mismatch` is heuristic. `Authorization drift` is based on a user-declared contract. The stored report preserves that distinction.
 
 ## Architecture
 
-| Module                  | Responsibility                                                    |
-| ----------------------- | ----------------------------------------------------------------- |
-| `src/git/`              | Safe snapshot creation and NUL-delimited Git diff parsing         |
-| `src/core/intent.mjs`   | Transparent prompt-scope inference                                |
-| `src/core/classify.mjs` | File, module, and sensitive-area classification                   |
-| `src/core/risk.mjs`     | Explainable Blast Radius and regression-risk factors              |
-| `src/core/store.mjs`    | Atomic checkpoint/session persistence                             |
-| `src/visual/`           | Optional Playwright capture and basic pixel/layout/DOM comparison |
-| `src/report/` + `web/`  | Standalone report generation and zero-framework UI                |
-| `bin/vibetrace.mjs`     | Thin executable boundary                                          |
+| Module                  | Responsibility                                             |
+| ----------------------- | ---------------------------------------------------------- |
+| `src/git/`              | Non-mutating snapshots and normalized Git evidence         |
+| `src/core/intent.mjs`   | Transparent prompt-scope inference                         |
+| `src/core/contract.mjs` | Explicit change authorization and compliance               |
+| `src/core/receipt.mjs`  | Deterministic evidence receipts                            |
+| `src/core/risk.mjs`     | Blast Radius, mismatch, authorization drift, risk          |
+| `src/core/store.mjs`    | Atomic checkpoint/session persistence and evidence binding |
+| `src/visual/`           | Optional screenshot, pixel, layout, DOM evidence           |
+| `src/report/` + `web/`  | Standalone evidence report                                 |
 
-The core CLI has no production framework or database. Playwright and PNG decoding are optional development adapters because they directly support the product's visual-evidence loop.
-
-## What is real in v0.2
+## What is implemented now
 
 - [x] Two-phase prompt-aware checkpoints
-- [x] Non-mutating Git worktree snapshots, including untracked files
-- [x] Working tree / staged / unstaged / commit diff normalization
-- [x] Intent-aware Blast Radius and explainable risk factors
-- [x] Stable checkpoint schema, sessions, timeline, and JSON output
-- [x] Playwright before/after screenshots
-- [x] Basic pixel, layout, and DOM regression evidence
-- [x] Standalone interactive reports
-- [x] Unit, integration, CLI, visual, and browser tests
-- [x] Pull-request CI
+- [x] Explicit path + file/line-budget change contracts
+- [x] Authorization Drift distinct from inferred Intent Mismatch
+- [x] Contract persistence across checkpoint start/finish processes
+- [x] Non-mutating Git before/after evidence
+- [x] Deterministic Evidence Receipts on completed guarded checkpoints
+- [x] One-shot `attest` command for scripts
+- [x] Explainable Blast Radius and risk factors
+- [x] Sessions, replay, JSON output, standalone reports
+- [x] Optional Playwright screenshot evidence with image hashes
+- [x] Basic pixel/layout/DOM comparison
+- [x] Automated unit/CLI/browser CI
+
+## Related work and originality boundary
+
+VibeTrace intentionally documents prior art rather than hiding it. AI change monitoring, Git checkpointing, prompt tracking, path allowlists, blast-radius analysis, visual regression, and session timelines existed before this project.
+
+The project therefore does **not** use “first ever” claims for those primitives.
+
+The distinctive design being developed here is the combination and separation of:
+
+1. **inferred intent** — useful context, but not permission;
+2. **explicit authorization** — the developer's declared change boundary;
+3. **observed effect** — Git and optional visual evidence;
+4. **authorization drift** — evidence that the effect crossed that declared boundary; and
+5. **deterministic receipts** — a compact integrity record over the captured evidence.
+
+See [Related work and differentiation boundary](docs/related-work.md) for the explicit non-novelty claims and design boundary.
 
 ## Roadmap
 
+- [ ] Richer contract assertions beyond path/file/line budgets
 - [ ] Guarded restore with drift detection, dry-run, and explicit confirmation
-- [ ] Agent hooks that attach prompt metadata without vendor lock-in
-- [ ] PR annotations and portable `.vibe` session bundles
-- [ ] Deterministic masking for volatile screenshot regions
-- [ ] Accessibility-tree diff and user-authored regression assertions
-
-VibeTrace will not claim semantic regression detection until it has an evidence model that can defend that claim.
+- [ ] Signed attestations layered on deterministic receipts
+- [ ] Vendor-neutral coding-agent hooks
+- [ ] PR annotations and portable evidence bundles
+- [ ] Deterministic masking for volatile visual regions
+- [ ] Accessibility-tree evidence and user-authored assertions
 
 ## Philosophy
 
-**Intent before telemetry.** A change is only “too large” relative to what was asked.
+**Intent is context, not permission.** A natural-language guess must not silently become an authorization boundary.
 
-**Explainable before intelligent.** A visible heuristic is more useful than a mysterious score.
+**Declared boundaries outrank guesses.** Crossing an explicit protected path is stronger evidence than a heuristic mismatch.
 
-**Git-compatible, not Git-shaped.** VibeTrace adds prompt and visual context without becoming another Git GUI.
+**Evidence before verdicts.** Preserve what happened before summarizing how risky it looks.
 
-**One complete loop before a platform.** The core workflow should be trustworthy before integrations multiply.
+**Explainable before intelligent.** Review tooling should show why it raised a flag.
+
+**Git-compatible, not Git-shaped.** Add AI-change context without becoming another Git GUI.
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md). Focused issues and pull requests are welcome, especially around diff edge cases, intent rules, risk calibration, and deterministic capture.
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Focused issues and pull requests are especially welcome around contract semantics, diff edge cases, risk calibration, deterministic capture, and evidence verification.
 
 Security reports belong in [SECURITY.md](SECURITY.md), not public issues.
 

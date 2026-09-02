@@ -43,7 +43,13 @@ export async function generateReport(root, checkpoints, selectedId) {
   const assetDirectory = join(reportDirectory, "assets");
   await mkdir(assetDirectory, { recursive: true });
 
-  for (const name of ["index.html", "styles.css", "app.js"]) {
+  for (const name of [
+    "index.html",
+    "styles.css",
+    "contract.css",
+    "app.js",
+    "contract-ui.js",
+  ]) {
     await copyFile(join(sourceWebDirectory, name), join(reportDirectory, name));
   }
 
@@ -80,7 +86,7 @@ export async function generateReport(root, checkpoints, selectedId) {
   let html = await readFile(join(reportDirectory, "index.html"), "utf8");
   html = html.replace(
     '<script type="module" src="./app.js"></script>',
-    '<script src="./report-data.js"></script>\n  <script type="module" src="./app.js"></script>',
+    '<script src="./report-data.js"></script>\n    <script type="module" src="./app.js"></script>',
   );
   await writeFile(join(reportDirectory, "index.html"), html, "utf8");
 

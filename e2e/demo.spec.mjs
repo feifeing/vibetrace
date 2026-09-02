@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
-test("the evidence workspace replays prompts and visual modes", async ({
+test("the evidence workspace replays prompts and authorization evidence", async ({
   page,
 }) => {
   const consoleErrors = [];
@@ -11,15 +11,28 @@ test("the evidence workspace replays prompts and visual modes", async ({
 
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Every prompt leaves a trace." }),
+    page.getByRole("heading", {
+      name: "Know what was asked. Know what was allowed. See what changed.",
+    }),
   ).toBeVisible();
   await expect(page.locator(".timeline-item")).toHaveCount(3);
   await expect(page.locator("#blastScore")).toHaveText("92");
   await expect(page.locator("#mismatch")).toContainText("INTENT MISMATCH");
+  await expect(page.locator(".authorization-section")).toContainText(
+    "WHAT YOU AUTHORIZED",
+  );
+  await expect(page.locator(".authorization-section")).toContainText(
+    "AUTHORIZATION DRIFT",
+  );
+  await expect(page.locator(".receipt-chip")).toContainText("EVIDENCE RECEIPT");
 
   await page.locator(".timeline-item").nth(1).click();
   await expect(page.locator("#evidence-title")).toContainText("cinematic");
   await expect(page.locator("#blastScore")).toHaveText("38");
+  await expect(page.locator(".contract-status")).toHaveText("ALIGNED");
+  await expect(page.locator(".authorization-section")).toContainText(
+    "AUTHORIZED SCOPE HELD",
+  );
 
   await page.locator('[data-view="diff"]').click();
   await expect(page.locator("#visualStage")).toHaveAttribute(

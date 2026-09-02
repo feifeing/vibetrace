@@ -1,0 +1,187 @@
+.authorization-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 20px 20px 18px;
+}
+
+.authorization-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.authorization-heading h2 {
+  font-size: 16px;
+  margin: 3px 0 0;
+}
+
+.contract-status {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 6px 8px;
+}
+
+.contract-status.violated {
+  background: rgba(255, 92, 122, 0.09);
+  border-color: rgba(255, 92, 122, 0.34);
+  color: #ff7895;
+}
+
+.contract-status.compliant {
+  background: rgba(176, 255, 114, 0.07);
+  border-color: rgba(176, 255, 114, 0.26);
+  color: #baff82;
+}
+
+.contract-status.undeclared {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.contract-copy {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.contract-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.contract-grid > div {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.contract-grid > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.contract-grid span,
+.contract-verdict span,
+.receipt-chip span {
+  color: rgba(255, 255, 255, 0.4);
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.contract-grid code {
+  background: rgba(154, 124, 255, 0.08);
+  border: 1px solid rgba(154, 124, 255, 0.13);
+  border-radius: 6px;
+  color: #d8cdff;
+  display: inline-block;
+  font-size: 10px;
+  margin: 0 5px 5px 0;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 4px 5px;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.contract-grid strong {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.contract-empty {
+  color: rgba(255, 255, 255, 0.34) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  margin: 0 !important;
+}
+
+.contract-verdict {
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  margin-top: 10px;
+  padding: 9px 10px;
+}
+
+.contract-verdict.violated {
+  background: linear-gradient(90deg, rgba(255, 92, 122, 0.08), transparent);
+  border-left-color: #ff5c7a;
+}
+
+.contract-verdict.compliant {
+  background: linear-gradient(90deg, rgba(176, 255, 114, 0.06), transparent);
+  border-left-color: #b0ff72;
+}
+
+.contract-verdict strong {
+  color: rgba(255, 255, 255, 0.77);
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.receipt-chip {
+  background: transparent;
+  border: 1px dashed rgba(154, 124, 255, 0.26);
+  border-radius: 9px;
+  cursor: pointer;
+  margin-top: 10px;
+  padding: 8px 9px;
+  text-align: left;
+  width: 100%;
+}
+
+.receipt-chip code {
+  color: #b8a7ff;
+  font-size: 10px;
+}
+
+.receipt-chip.copied {
+  border-style: solid;
+  border-color: rgba(176, 255, 114, 0.4);
+}
+
+.contract-hint {
+  align-items: center;
+  background: rgba(154, 124, 255, 0.05);
+  border: 1px dashed rgba(154, 124, 255, 0.18);
+  border-radius: 10px;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+  padding: 9px;
+}
+
+.contract-hint span {
+  color: #b8a7ff;
+}
+
+.contract-hint code {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 780px) {
+  .contract-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-grid > div:last-child {
+    grid-column: auto;
+  }
+}

@@ -1,4 +1,5 @@
 import { classifyFile } from "./classify.mjs";
+import { evaluateChangeContract } from "./contract.mjs";
 import { inferPromptIntent } from "./intent.mjs";
 
 const SENSITIVE_WEIGHTS = {
@@ -94,7 +95,12 @@ function analyzeMismatch(intent, files, modules) {
   };
 }
 
-export function analyzeChangeSet({ prompt = "", files = [], visual = null }) {
+export function analyzeChangeSet({
+  prompt = "",
+  files = [],
+  visual = null,
+  contract = null,
+}) {
   const intent = inferPromptIntent(prompt);
   const enrichedFiles = enrichFiles(files);
   const modules = new Set(enrichedFiles.map((file) => file.module));
@@ -106,12 +112,20 @@ export function analyzeChangeSet({ prompt = "", files = [], visual = null }) {
   );
   const binaryFiles = enrichedFiles.filter((file) => file.binary).length;
   const mismatch = analyzeMismatch(intent, enrichedFiles, modules);
+  const contractCompliance = evaluateChangeContract(contract, enrichedFiles);
 
   let blastScore = 0;
   blastScore += clamp(enrichedFiles.length * 4, 0, 28);
   blastScore += clamp(Math.max(0, modules.size - 1) * 8, 0, 24);
   blastScore += clamp(Math.max(0, directories.size - 1) * 3, 0, 15);
   blastScore += clamp(mismatch.points, 0, 24);
+  blastScore += clamp(
+    contractCompliance.violations.length * 10 +
+      contractCompliance.unauthorizedFiles.length * 4 +
+      contractCompliance.protectedFiles.length * 6,
+    0,
+    28,
+  );
   blastScore += clamp(
     [...signals].filter((signal) => SENSITIVE_WEIGHTS[signal]).length * 4,
     0,
@@ -177,6 +191,24 @@ export function analyzeChangeSet({ prompt = "", files = [], visual = null }) {
     mismatch.explanation,
   );
 
+  if (contractCompliance.declared && contractCompliance.violations.length > 0) {
+    addFactor(
+      factors,
+      "authorization-drift",
+      "Declared change contract violated",
+      clamp(
+        contractCompliance.violations.length * 8 +
+          contractCompliance.unauthorizedFiles.length * 3 +
+          contractCompliance.protectedFiles.length * 5,
+        8,
+        28,
+      ),
+      contractCompliance.violations
+        .map((violation) => violation.detail)
+        .join("; "),
+    );
+  }
+
   if (enrichedFiles.length >= 15 || linesChanged >= 500) {
     addFactor(
       factors,
@@ -209,6 +241,7 @@ export function analyzeChangeSet({ prompt = "", files = [], visual = null }) {
 
   return {
     intent,
+    contractCompliance,
     summary: {
       filesChanged: enrichedFiles.length,
       linesChanged,
@@ -231,11 +264,13 @@ export function analyzeChangeSet({ prompt = "", files = [], visual = null }) {
       directories: [...directories],
       sensitiveAreas: sensitiveSignals,
       intentMismatch: mismatch,
+      authorizationDrift:
+        contractCompliance.declared && contractCompliance.status === "violated",
     },
     risk: {
       score: riskScore,
       level: levelForRisk(riskScore),
-      model: "vibetrace-explainable-risk-v1",
+      model: "vibetrace-evidence-risk-v2",
       factors: factors.sort((a, b) => b.points - a.points),
       note: "This is a deterministic review heuristic, not a probability of failure.",
     },

@@ -203,7 +203,9 @@ export function analyzeChangeSet({
         8,
         28,
       ),
-      contractCompliance.violations.map((violation) => violation.detail).join("; "),
+      contractCompliance.violations
+        .map((violation) => violation.detail)
+        .join("; "),
     );
   }
 

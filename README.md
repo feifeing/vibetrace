@@ -257,16 +257,16 @@ vibetrace report --open
 
 Each captured PNG is SHA-256 hashed at capture time and re-hashed by `vibetrace verify` when the local artifact is available.
 
-| Evidence layer       | Capture | Verification | Meaning                                      |
-| -------------------- | ------- | ------------ | -------------------------------------------- |
-| Git object IDs       | Yes     | Receipt      | Before/after repository object references   |
-| File + line scope    | Yes     | Receipt      | Normalized changed paths and churn           |
-| Contract compliance  | Yes     | Receipt      | Explicit authorization drift                 |
-| Screenshot bytes     | Yes     | **File hash**| Detect replaced or missing local PNGs        |
-| Pixel difference     | Yes     | Receipt      | Thresholded RGBA difference                  |
-| Layout change        | Basic   | Receipt      | Visible elements moved/resized/added/removed |
-| DOM change           | Basic   | Receipt      | DOM fingerprint + visible-node delta         |
-| Semantic correctness | **No**  | **No**       | Requires assertions or human review          |
+| Evidence layer       | Capture | Verification  | Meaning                                      |
+| -------------------- | ------- | ------------- | -------------------------------------------- |
+| Git object IDs       | Yes     | Receipt       | Before/after repository object references    |
+| File + line scope    | Yes     | Receipt       | Normalized changed paths and churn           |
+| Contract compliance  | Yes     | Receipt       | Explicit authorization drift                 |
+| Screenshot bytes     | Yes     | **File hash** | Detect replaced or missing local PNGs        |
+| Pixel difference     | Yes     | Receipt       | Thresholded RGBA difference                  |
+| Layout change        | Basic   | Receipt       | Visible elements moved/resized/added/removed |
+| DOM change           | Basic   | Receipt       | DOM fingerprint + visible-node delta         |
+| Semantic correctness | **No**  | **No**        | Requires assertions or human review          |
 
 Browser output can vary by OS, browser build, fonts, and hardware. Compare visual captures from the same environment.
 
@@ -339,17 +339,17 @@ Risk = file scope
 
 ## Architecture
 
-| Module                  | Responsibility                                             |
-| ----------------------- | ---------------------------------------------------------- |
-| `src/git/`              | Non-mutating snapshots and normalized Git evidence         |
-| `src/core/intent.mjs`   | Transparent prompt-scope inference                         |
-| `src/core/contract.mjs` | Explicit change authorization and compliance               |
-| `src/core/receipt.mjs`  | Deterministic evidence receipts and receipt recomputation  |
-| `src/verify.mjs`        | Checkpoint and local visual-artifact integrity verification|
-| `src/core/risk.mjs`     | Blast Radius, mismatch, authorization drift, risk          |
-| `src/core/store.mjs`    | Atomic checkpoint/session persistence and evidence binding |
-| `src/visual/`           | Optional screenshot, pixel, layout, DOM evidence           |
-| `src/report/` + `web/`  | Standalone evidence report                                 |
+| Module                  | Responsibility                                              |
+| ----------------------- | ----------------------------------------------------------- |
+| `src/git/`              | Non-mutating snapshots and normalized Git evidence          |
+| `src/core/intent.mjs`   | Transparent prompt-scope inference                          |
+| `src/core/contract.mjs` | Explicit change authorization and compliance                |
+| `src/core/receipt.mjs`  | Deterministic evidence receipts and receipt recomputation   |
+| `src/verify.mjs`        | Checkpoint and local visual-artifact integrity verification |
+| `src/core/risk.mjs`     | Blast Radius, mismatch, authorization drift, risk           |
+| `src/core/store.mjs`    | Atomic checkpoint/session persistence and evidence binding  |
+| `src/visual/`           | Optional screenshot, pixel, layout, DOM evidence            |
+| `src/report/` + `web/`  | Standalone evidence report                                  |
 
 ## What is implemented now
 

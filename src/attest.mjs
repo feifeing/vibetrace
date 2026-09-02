@@ -10,10 +10,12 @@ const HELP = `VibeTrace attest — verify an explicit change contract against th
 Usage:
   vibetrace attest --prompt "Change the button color" \\
     --allow "src/components/**,src/styles/**" \\
-    --deny "src/auth/**,src/router/**" \\
+    --deny "src/router/**" \\
+    --protect-surface "auth,database,dependencies,ci" \\
     --max-files 3 --max-lines 80 --max-modules 2 [--json]
 
-The contract is user-declared authorization, not inferred intent. VibeTrace compares it with
+The contract is user-declared authorization, not inferred intent. Protected surfaces use
+VibeTrace's deterministic repository classifiers. VibeTrace compares the contract with
 HEAD → current worktree, reports scope drift, and emits a deterministic evidence receipt.`;
 
 function parse(argv) {
@@ -29,6 +31,7 @@ function parse(argv) {
         "--prompt",
         "--allow",
         "--deny",
+        "--protect-surface",
         "--max-files",
         "--max-lines",
         "--max-modules",
@@ -55,6 +58,9 @@ function printHuman(checkpoint) {
   console.log(
     `  contract     allow=${contract.allow.join(",") || "*"} deny=${contract.deny.join(",") || "none"}`,
   );
+  if (contract.protectedSurfaces.length > 0) {
+    console.log(`  protected    ${contract.protectedSurfaces.join(", ")}`);
+  }
   console.log(
     `  observed     ${analysis.summary.filesChanged} files · ${analysis.summary.linesChanged} lines · ${analysis.summary.modulesChanged} modules`,
   );
@@ -85,13 +91,14 @@ export async function runAttest(argv) {
   const authorization = createChangeContract({
     allow: options["--allow"],
     deny: options["--deny"],
+    protectedSurfaces: options["--protect-surface"],
     maxFiles: options["--max-files"],
     maxLines: options["--max-lines"],
     maxModules: options["--max-modules"],
   });
   if (!authorization) {
     throw new Error(
-      "attest requires an explicit contract: use --allow, --deny, --max-files, --max-lines, or --max-modules.",
+      "attest requires an explicit contract: use --allow, --deny, --protect-surface, --max-files, --max-lines, or --max-modules.",
     );
   }
 

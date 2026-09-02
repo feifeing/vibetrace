@@ -4,6 +4,7 @@ function contractArguments(argv) {
   const supported = new Set([
     "--allow",
     "--deny",
+    "--protect-surface",
     "--max-files",
     "--max-lines",
     "--max-modules",
@@ -36,7 +37,7 @@ async function applyCheckpointContract(argv) {
 
   if (clean.includes("--finish") || clean.includes("--abort")) {
     throw new Error(
-      "Declare --allow/--deny/--max-files/--max-lines/--max-modules when starting a checkpoint, not when finishing it.",
+      "Declare change-contract options when starting a checkpoint, not when finishing it.",
     );
   }
 
@@ -45,6 +46,7 @@ async function applyCheckpointContract(argv) {
   const contract = createChangeContract({
     allow: values["--allow"],
     deny: values["--deny"],
+    protectedSurfaces: values["--protect-surface"],
     maxFiles: values["--max-files"],
     maxLines: values["--max-lines"],
     maxModules: values["--max-modules"],

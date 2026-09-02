@@ -25,6 +25,62 @@ test("explicit authorization is evaluated independently from prompt inference", 
   assert.deepEqual(result.unauthorizedFiles, ["src/auth/session.ts"]);
 });
 
+test("protected surfaces block sensitive files without repository-specific globs", () => {
+  const contract = createChangeContract({
+    protectedSurfaces: "auth,database,dependencies,ci",
+  });
+  const files = [
+    { path: "src/components/Button.tsx", additions: 4, deletions: 1 },
+    { path: "src/auth/session.ts", additions: 2, deletions: 1 },
+    { path: "prisma/schema.prisma", additions: 3, deletions: 0 },
+    { path: "package-lock.json", additions: 8, deletions: 4 },
+    { path: ".github/workflows/ci.yml", additions: 1, deletions: 1 },
+  ];
+
+  const result = evaluateChangeContract(contract, files);
+  assert.equal(result.status, "violated");
+  assert.deepEqual(result.protectedSurfacesTouched, [
+    "ci",
+    "dependencies",
+    "auth",
+    "database",
+  ]);
+  assert.deepEqual(result.protectedSurfaceFiles, [
+    ".github/workflows/ci.yml",
+    "package-lock.json",
+    "prisma/schema.prisma",
+    "src/auth/session.ts",
+  ]);
+  assert.ok(
+    result.violations.some(
+      (violation) => violation.id === "protected-surface-touched",
+    ),
+  );
+});
+
+test("protected surface declaration is canonical regardless of input order", () => {
+  const first = createChangeContract({
+    protectedSurfaces: "auth,ci,database,dependencies",
+  });
+  const second = createChangeContract({
+    protectedSurfaces: "dependencies,database,ci,auth",
+  });
+  assert.deepEqual(first.protectedSurfaces, second.protectedSurfaces);
+  assert.deepEqual(first.protectedSurfaces, [
+    "ci",
+    "dependencies",
+    "auth",
+    "database",
+  ]);
+});
+
+test("protected surfaces are validated when the contract is declared", () => {
+  assert.throws(
+    () => createChangeContract({ protectedSurfaces: "auth,magic" }),
+    /Unknown protected surface\(s\): magic/u,
+  );
+});
+
 test("module budgets turn cross-module spread into explicit authorization drift", () => {
   const contract = createChangeContract({ maxModules: 1 });
   const files = [
@@ -72,6 +128,26 @@ test("risk analysis distinguishes inferred mismatch from declared authorization 
 
   assert.equal(analysis.contractCompliance.status, "violated");
   assert.equal(analysis.blastRadius.authorizationDrift, true);
+  assert.ok(
+    analysis.risk.factors.some((factor) => factor.id === "authorization-drift"),
+  );
+});
+
+test("protected-surface violations feed the authorization-drift risk factor", () => {
+  const analysis = analyzeChangeSet({
+    prompt: "Refine the checkout card",
+    contract: createChangeContract({ protectedSurfaces: "auth,database" }),
+    files: [
+      { path: "src/checkout/Card.tsx", additions: 5, deletions: 2 },
+      { path: "src/auth/session.ts", additions: 1, deletions: 1 },
+    ],
+  });
+
+  assert.equal(analysis.contractCompliance.status, "violated");
+  assert.equal(analysis.blastRadius.authorizationDrift, true);
+  assert.deepEqual(analysis.contractCompliance.protectedSurfacesTouched, [
+    "auth",
+  ]);
   assert.ok(
     analysis.risk.factors.some((factor) => factor.id === "authorization-drift"),
   );

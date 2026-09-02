@@ -188,18 +188,18 @@ Prompt mismatch and authorization drift stay separate in the stored analysis. Ea
 
 ## Architecture
 
-| Module                  | Responsibility                                                        |
-| ----------------------- | --------------------------------------------------------------------- |
-| `src/git/`              | Safe snapshot creation and NUL-delimited Git diff parsing             |
-| `src/core/intent.mjs`   | Transparent prompt-scope inference                                    |
-| `src/core/contract.mjs` | Explicit user-declared path and change-budget authorization           |
-| `src/core/receipt.mjs`  | Deterministic evidence receipts over captured evidence                |
-| `src/core/classify.mjs` | File, module, and sensitive-area classification                       |
-| `src/core/risk.mjs`     | Explainable Blast Radius, authorization drift, and review-risk factors|
-| `src/core/store.mjs`    | Atomic checkpoint/session persistence                                 |
-| `src/visual/`           | Optional Playwright capture and basic pixel/layout/DOM comparison     |
-| `src/report/` + `web/`  | Standalone report generation and zero-framework UI                    |
-| `bin/vibetrace.mjs`     | Thin executable boundary                                              |
+| Module                  | Responsibility                                                         |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `src/git/`              | Safe snapshot creation and NUL-delimited Git diff parsing              |
+| `src/core/intent.mjs`   | Transparent prompt-scope inference                                     |
+| `src/core/contract.mjs` | Explicit user-declared path and change-budget authorization            |
+| `src/core/receipt.mjs`  | Deterministic evidence receipts over captured evidence                 |
+| `src/core/classify.mjs` | File, module, and sensitive-area classification                        |
+| `src/core/risk.mjs`     | Explainable Blast Radius, authorization drift, and review-risk factors |
+| `src/core/store.mjs`    | Atomic checkpoint/session persistence                                  |
+| `src/visual/`           | Optional Playwright capture and basic pixel/layout/DOM comparison      |
+| `src/report/` + `web/`  | Standalone report generation and zero-framework UI                     |
+| `bin/vibetrace.mjs`     | Thin executable boundary                                               |
 
 The core CLI has no production framework or database. Playwright and PNG decoding are optional development adapters because they directly support the product's visual-evidence loop.
 

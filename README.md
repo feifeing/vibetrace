@@ -208,33 +208,33 @@ vibetrace report --open
 
 Each captured PNG is SHA-256 hashed so the artifact can participate in the Evidence Receipt.
 
-| Evidence layer | v0.2 support | What it means |
-| --- | --- | --- |
-| Git objects | Yes | Stable before/after repository evidence |
-| File + line scope | Yes | Normalized changed paths and churn |
-| Contract compliance | Yes | Explicit authorization drift |
-| Pixel difference | Yes | Thresholded RGBA difference |
-| Layout change | Basic | Visible elements moved/resized/added/removed |
-| DOM change | Basic | DOM fingerprint + visible-node delta |
-| Semantic correctness | **No** | Requires stronger assertions or human review |
+| Evidence layer       | v0.2 support | What it means                                |
+| -------------------- | ------------ | -------------------------------------------- |
+| Git objects          | Yes          | Stable before/after repository evidence      |
+| File + line scope    | Yes          | Normalized changed paths and churn           |
+| Contract compliance  | Yes          | Explicit authorization drift                 |
+| Pixel difference     | Yes          | Thresholded RGBA difference                  |
+| Layout change        | Basic        | Visible elements moved/resized/added/removed |
+| DOM change           | Basic        | DOM fingerprint + visible-node delta         |
+| Semantic correctness | **No**       | Requires stronger assertions or human review |
 
 Browser output can vary by OS, browser build, fonts, and hardware. Compare visual captures from the same environment.
 
 ## CLI
 
-| Command | What it does |
-| --- | --- |
-| `vibetrace init` | Initializes local VibeTrace state |
-| `vibetrace checkpoint --prompt "…"` | Starts a two-phase before/after checkpoint |
-| `vibetrace checkpoint … --allow/--deny` | Starts a checkpoint with an explicit change contract |
-| `vibetrace checkpoint --finish` | Captures after state, evaluates evidence, stores a receipt |
-| `vibetrace checkpoint --abort` | Removes active checkpoint metadata/artifacts/private refs |
-| `vibetrace diff [id]` | Shows live or saved Blast Radius and review evidence |
-| `vibetrace diff --json` | Emits machine-readable analysis |
-| `vibetrace attest …` | Verifies current worktree changes against a declared contract |
-| `vibetrace replay` | Replays the current session timeline |
-| `vibetrace session new --name "…"` | Starts a separate evidence timeline |
-| `vibetrace report [id]` | Generates a standalone local report |
+| Command                                 | What it does                                                  |
+| --------------------------------------- | ------------------------------------------------------------- |
+| `vibetrace init`                        | Initializes local VibeTrace state                             |
+| `vibetrace checkpoint --prompt "…"`     | Starts a two-phase before/after checkpoint                    |
+| `vibetrace checkpoint … --allow/--deny` | Starts a checkpoint with an explicit change contract          |
+| `vibetrace checkpoint --finish`         | Captures after state, evaluates evidence, stores a receipt    |
+| `vibetrace checkpoint --abort`          | Removes active checkpoint metadata/artifacts/private refs     |
+| `vibetrace diff [id]`                   | Shows live or saved Blast Radius and review evidence          |
+| `vibetrace diff --json`                 | Emits machine-readable analysis                               |
+| `vibetrace attest …`                    | Verifies current worktree changes against a declared contract |
+| `vibetrace replay`                      | Replays the current session timeline                          |
+| `vibetrace session new --name "…"`      | Starts a separate evidence timeline                           |
+| `vibetrace report [id]`                 | Generates a standalone local report                           |
 
 Change-contract options:
 
@@ -287,16 +287,16 @@ Risk = file scope
 
 ## Architecture
 
-| Module | Responsibility |
-| --- | --- |
-| `src/git/` | Non-mutating snapshots and normalized Git evidence |
-| `src/core/intent.mjs` | Transparent prompt-scope inference |
-| `src/core/contract.mjs` | Explicit change authorization and compliance |
-| `src/core/receipt.mjs` | Deterministic evidence receipts |
-| `src/core/risk.mjs` | Blast Radius, mismatch, authorization drift, risk |
-| `src/core/store.mjs` | Atomic checkpoint/session persistence and evidence binding |
-| `src/visual/` | Optional screenshot, pixel, layout, DOM evidence |
-| `src/report/` + `web/` | Standalone evidence report |
+| Module                  | Responsibility                                             |
+| ----------------------- | ---------------------------------------------------------- |
+| `src/git/`              | Non-mutating snapshots and normalized Git evidence         |
+| `src/core/intent.mjs`   | Transparent prompt-scope inference                         |
+| `src/core/contract.mjs` | Explicit change authorization and compliance               |
+| `src/core/receipt.mjs`  | Deterministic evidence receipts                            |
+| `src/core/risk.mjs`     | Blast Radius, mismatch, authorization drift, risk          |
+| `src/core/store.mjs`    | Atomic checkpoint/session persistence and evidence binding |
+| `src/visual/`           | Optional screenshot, pixel, layout, DOM evidence           |
+| `src/report/` + `web/`  | Standalone evidence report                                 |
 
 ## What is implemented now
 

@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 
 function contractArguments(argv) {
-  const supported = new Set(["--allow", "--deny", "--max-files", "--max-lines"]);
+  const supported = new Set([
+    "--allow",
+    "--deny",
+    "--max-files",
+    "--max-lines",
+  ]);
   const clean = [];
   const values = {};
 
@@ -34,9 +39,8 @@ async function applyCheckpointContract(argv) {
     );
   }
 
-  const { createChangeContract, setRuntimeChangeContract } = await import(
-    "../src/core/contract.mjs"
-  );
+  const { createChangeContract, setRuntimeChangeContract } =
+    await import("../src/core/contract.mjs");
   const contract = createChangeContract({
     allow: values["--allow"],
     deny: values["--deny"],

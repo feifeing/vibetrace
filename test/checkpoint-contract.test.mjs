@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { createRepository } from "../test-support/helpers.mjs";
@@ -27,16 +27,21 @@ test("two-phase checkpoints persist authorization and emit evidence receipts", a
     "--allow",
     "app.js",
     "--deny",
-    "src/auth/**",
+    "src/private/**",
+    "--protect-surface",
+    "auth",
     "--max-files",
     "1",
     "--max-lines",
     "20",
+    "--max-modules",
+    "1",
   ]);
 
   await writeFile(join(root, "app.js"), "export const value = 2;\n", "utf8");
+  await mkdir(join(root, "src", "auth"), { recursive: true });
   await writeFile(
-    join(root, "src-auth.js"),
+    join(root, "src", "auth", "session.js"),
     'export const session = "changed";\n',
     "utf8",
   );
@@ -57,13 +62,22 @@ test("two-phase checkpoints persist authorization and emit evidence receipts", a
   );
 
   assert.deepEqual(checkpoint.authorization.allow, ["app.js"]);
-  assert.deepEqual(checkpoint.authorization.deny, ["src/auth/**"]);
+  assert.deepEqual(checkpoint.authorization.deny, ["src/private/**"]);
+  assert.deepEqual(checkpoint.authorization.protectedSurfaces, ["auth"]);
   assert.equal(checkpoint.authorization.maxFiles, 1);
+  assert.equal(checkpoint.authorization.maxModules, 1);
   assert.equal(checkpoint.analysis.contractCompliance.status, "violated");
+  assert.deepEqual(checkpoint.analysis.contractCompliance.protectedSurfacesTouched, [
+    "auth",
+  ]);
   assert.equal(checkpoint.analysis.blastRadius.authorizationDrift, true);
   assert.match(checkpoint.receipt.receiptId, /^vtr_[a-f0-9]{24}$/u);
   assert.equal(
     checkpoint.receipt.evidence.authorization.contract.maxFiles,
     checkpoint.authorization.maxFiles,
+  );
+  assert.deepEqual(
+    checkpoint.receipt.evidence.authorization.contract.protectedSurfaces,
+    checkpoint.authorization.protectedSurfaces,
   );
 });

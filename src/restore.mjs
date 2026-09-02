@@ -20,10 +20,12 @@ function parse(argv) {
     if (token === "--apply") options.apply = true;
     else if (token === "--json") options.json = true;
     else if (["--help", "-h"].includes(token)) options.help = true;
-    else if (token.startsWith("-")) throw new Error(`Unknown restore option: ${token}`);
+    else if (token.startsWith("-"))
+      throw new Error(`Unknown restore option: ${token}`);
     else positionals.push(token);
   }
-  if (positionals.length > 1) throw new Error(`Unexpected argument: ${positionals[1]}`);
+  if (positionals.length > 1)
+    throw new Error(`Unexpected argument: ${positionals[1]}`);
   return { ...options, checkpoint: positionals[0] || null };
 }
 
@@ -38,8 +40,10 @@ async function resolveCompletedCheckpoint(root, token) {
   const matches = completed.filter(
     (checkpoint) => checkpoint.id === token || checkpoint.id.startsWith(token),
   );
-  if (matches.length === 0) throw new Error(`Checkpoint ${token} was not found.`);
-  if (matches.length > 1) throw new Error(`Checkpoint prefix ${token} is ambiguous.`);
+  if (matches.length === 0)
+    throw new Error(`Checkpoint ${token} was not found.`);
+  if (matches.length > 1)
+    throw new Error(`Checkpoint prefix ${token} is ambiguous.`);
   return matches[0];
 }
 
@@ -57,7 +61,9 @@ function printPlan(plan) {
   console.log("");
   console.log(`✦ VibeTrace guarded restore ${plan.checkpointId}`);
   console.log(`  status       ${plan.canApply ? "READY" : "BLOCKED BY DRIFT"}`);
-  console.log(`  drift        ${plan.drift.length} file(s) since checkpoint completion`);
+  console.log(
+    `  drift        ${plan.drift.length} file(s) since checkpoint completion`,
+  );
   console.log(`  restore      ${plan.restore.length} file(s) would change`);
   for (const file of plan.restore) {
     const rename = file.oldPath ? `${file.oldPath} → ` : "";
@@ -123,14 +129,23 @@ export async function runRestore(argv) {
   const headAfter = runGit(root, ["rev-parse", "HEAD"]);
   const indexAfter = runGit(root, ["write-tree"]);
   if (headAfter !== headBefore || indexAfter !== indexBefore) {
-    throw new Error("Restore safety invariant failed: HEAD or the real Git index changed.");
+    throw new Error(
+      "Restore safety invariant failed: HEAD or the real Git index changed.",
+    );
   }
 
-  const output = { ...result, dryRun: false, applied: true, verification: applied.verification };
+  const output = {
+    ...result,
+    dryRun: false,
+    applied: true,
+    verification: applied.verification,
+  };
   if (options.json) console.log(JSON.stringify(output, null, 2));
   else {
     printPlan(plan);
-    console.log("restored worktree to the checkpoint before-state; HEAD and index unchanged");
+    console.log(
+      "restored worktree to the checkpoint before-state; HEAD and index unchanged",
+    );
   }
   return 0;
 }

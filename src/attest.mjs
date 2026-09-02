@@ -11,7 +11,7 @@ Usage:
   vibetrace attest --prompt "Change the button color" \\
     --allow "src/components/**,src/styles/**" \\
     --deny "src/auth/**,src/router/**" \\
-    --max-files 3 --max-lines 80 [--json]
+    --max-files 3 --max-lines 80 --max-modules 2 [--json]
 
 The contract is user-declared authorization, not inferred intent. VibeTrace compares it with
 HEAD → current worktree, reports scope drift, and emits a deterministic evidence receipt.`;
@@ -25,9 +25,14 @@ function parse(argv) {
       continue;
     }
     if (
-      !["--prompt", "--allow", "--deny", "--max-files", "--max-lines"].includes(
-        token,
-      )
+      ![
+        "--prompt",
+        "--allow",
+        "--deny",
+        "--max-files",
+        "--max-lines",
+        "--max-modules",
+      ].includes(token)
     ) {
       throw new Error(`Unknown attest option: ${token}`);
     }
@@ -51,7 +56,7 @@ function printHuman(checkpoint) {
     `  contract     allow=${contract.allow.join(",") || "*"} deny=${contract.deny.join(",") || "none"}`,
   );
   console.log(
-    `  observed     ${analysis.summary.filesChanged} files · ${analysis.summary.linesChanged} lines`,
+    `  observed     ${analysis.summary.filesChanged} files · ${analysis.summary.linesChanged} lines · ${analysis.summary.modulesChanged} modules`,
   );
   console.log(`  compliance   ${compliance.status.toUpperCase()}`);
   for (const violation of compliance.violations) {
@@ -82,10 +87,11 @@ export async function runAttest(argv) {
     deny: options["--deny"],
     maxFiles: options["--max-files"],
     maxLines: options["--max-lines"],
+    maxModules: options["--max-modules"],
   });
   if (!authorization) {
     throw new Error(
-      "attest requires an explicit contract: use --allow, --deny, --max-files, or --max-lines.",
+      "attest requires an explicit contract: use --allow, --deny, --max-files, --max-lines, or --max-modules.",
     );
   }
 

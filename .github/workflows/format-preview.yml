@@ -19,5 +19,5 @@ jobs:
       - run: npm ci
       - name: Print Prettier diff
         run: |
-          npx prettier --write docs/change-contract.md
-          git diff --no-color -- docs/change-contract.md
+          npm run format
+          git diff --no-color

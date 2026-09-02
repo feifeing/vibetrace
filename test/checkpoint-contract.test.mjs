@@ -67,9 +67,10 @@ test("two-phase checkpoints persist authorization and emit evidence receipts", a
   assert.equal(checkpoint.authorization.maxFiles, 1);
   assert.equal(checkpoint.authorization.maxModules, 1);
   assert.equal(checkpoint.analysis.contractCompliance.status, "violated");
-  assert.deepEqual(checkpoint.analysis.contractCompliance.protectedSurfacesTouched, [
-    "auth",
-  ]);
+  assert.deepEqual(
+    checkpoint.analysis.contractCompliance.protectedSurfacesTouched,
+    ["auth"],
+  );
   assert.equal(checkpoint.analysis.blastRadius.authorizationDrift, true);
   assert.match(checkpoint.receipt.receiptId, /^vtr_[a-f0-9]{24}$/u);
   assert.equal(

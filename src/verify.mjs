@@ -3,9 +3,9 @@ import { readFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { verifyEvidenceReceipt } from "./core/receipt.mjs";
 import { listCheckpoints } from "./core/store.mjs";
-import { findRepositoryRoot } from "./git/git.mjs";
+import { findRepositoryRoot, runGit } from "./git/git.mjs";
 
-const HELP = `vibetrace verify [checkpoint] [--json]\n\nRecompute a completed checkpoint's Evidence Receipt and verify local visual artifacts when present.\nThe command exits 0 when evidence verifies and 2 when metadata or artifact evidence no longer matches.\n\nOptions:\n  --json     Emit machine-readable verification output\n  -h, --help Show help`;
+const HELP = `vibetrace verify [checkpoint] [--json]\n\nRecompute a completed checkpoint's Evidence Receipt and verify referenced Git/visual evidence when present.\nThe command exits 0 when evidence verifies and 2 when metadata, Git evidence, or artifact evidence no longer matches.\n\nOptions:\n  --json     Emit machine-readable verification output\n  -h, --help Show help`;
 
 function parse(argv) {
   const options = new Set();
@@ -46,6 +46,41 @@ async function sha256File(path) {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+function verifyGitEvidence(root, checkpoint) {
+  const checks = [];
+  for (const phase of ["before", "after"]) {
+    const commit = checkpoint[phase]?.commit;
+    if (!commit) continue;
+
+    let objectStatus = "verified";
+    try {
+      runGit(root, ["cat-file", "-e", `${commit}^{commit}`]);
+    } catch {
+      objectStatus = "missing";
+    }
+
+    const ref = `refs/vibetrace/checkpoints/${checkpoint.id}/${phase}`;
+    let actualRef = null;
+    let refStatus = "verified";
+    try {
+      actualRef = runGit(root, ["rev-parse", "--verify", ref]).trim();
+      if (actualRef !== commit) refStatus = "mismatch";
+    } catch {
+      refStatus = "missing";
+    }
+
+    checks.push({
+      phase,
+      commit,
+      objectStatus,
+      ref,
+      actualRef,
+      refStatus,
+    });
+  }
+  return checks;
+}
+
 async function verifyVisualArtifacts(root, checkpoint) {
   const checks = [];
   for (const phase of ["before", "after"]) {
@@ -77,6 +112,21 @@ async function verifyVisualArtifacts(root, checkpoint) {
   return checks;
 }
 
+function verificationReason(receipt, gitEvidence, artifacts) {
+  if (!receipt.valid) return receipt.reason;
+  if (gitEvidence.some((item) => item.objectStatus === "missing"))
+    return "git-object-missing";
+  if (gitEvidence.some((item) => item.refStatus === "missing"))
+    return "git-ref-missing";
+  if (gitEvidence.some((item) => item.refStatus === "mismatch"))
+    return "git-ref-mismatch";
+  if (artifacts.some((artifact) => artifact.status === "missing"))
+    return "artifact-missing";
+  if (artifacts.some((artifact) => artifact.status === "mismatch"))
+    return "artifact-mismatch";
+  return "verified";
+}
+
 export async function runVerify(argv = process.argv.slice(3), io = {}) {
   const stdout = io.stdout || process.stdout;
   const stderr = io.stderr || process.stderr;
@@ -97,23 +147,16 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
     const root = findRepositoryRoot(io.cwd || process.cwd());
     const checkpoint = resolve(await listCheckpoints(root), parsed.checkpoint);
     const receipt = verifyEvidenceReceipt(checkpoint);
+    const gitEvidence = verifyGitEvidence(root, checkpoint);
     const artifacts = await verifyVisualArtifacts(root, checkpoint);
-    const artifactsValid = artifacts.every(
-      (artifact) => artifact.status === "verified",
-    );
-    const valid = receipt.valid && artifactsValid;
-    const reason = !receipt.valid
-      ? receipt.reason
-      : artifacts.some((artifact) => artifact.status === "missing")
-        ? "artifact-missing"
-        : artifactsValid
-          ? "verified"
-          : "artifact-mismatch";
+    const reason = verificationReason(receipt, gitEvidence, artifacts);
+    const valid = reason === "verified";
     const result = {
       checkpointId: checkpoint.id,
       valid,
       reason,
       receipt,
+      gitEvidence,
       artifacts,
     };
 
@@ -122,6 +165,10 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
     } else if (valid) {
       stdout.write(`verified ${checkpoint.id}\n`);
       stdout.write(`receipt  ${receipt.actualReceiptId}\n`);
+      if (gitEvidence.length > 0)
+        stdout.write(
+          `git      ${gitEvidence.length} snapshot ref(s) verified\n`,
+        );
       if (artifacts.length > 0)
         stdout.write(`artifacts ${artifacts.length} visual file(s) verified\n`);
       stdout.write("evidence matches the stored receipt\n");
@@ -132,6 +179,15 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
         stdout.write(`stored   ${receipt.actualReceiptId}\n`);
       if (receipt.expectedReceiptId)
         stdout.write(`current  ${receipt.expectedReceiptId}\n`);
+      for (const item of gitEvidence.filter(
+        (candidate) =>
+          candidate.objectStatus !== "verified" ||
+          candidate.refStatus !== "verified",
+      )) {
+        stdout.write(
+          `git ${item.phase} object=${item.objectStatus} ref=${item.refStatus} ${item.ref}\n`,
+        );
+      }
       for (const artifact of artifacts.filter(
         (candidate) => candidate.status !== "verified",
       )) {

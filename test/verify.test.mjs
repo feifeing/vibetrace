@@ -19,6 +19,16 @@ import {
   memoryStream,
 } from "../test-support/helpers.mjs";
 
+function anchorCheckpointRefs(root, checkpoint) {
+  for (const phase of ["before", "after"]) {
+    git(root, [
+      "update-ref",
+      `refs/vibetrace/checkpoints/${checkpoint.id}/${phase}`,
+      checkpoint[phase].commit,
+    ]);
+  }
+}
+
 function checkpointFixture(root, sessionId) {
   const head = git(root, ["rev-parse", "HEAD"]);
   const checkpoint = {
@@ -47,6 +57,7 @@ function checkpointFixture(root, sessionId) {
     visual: null,
   };
   checkpoint.receipt = createEvidenceReceipt(checkpoint);
+  anchorCheckpointRefs(root, checkpoint);
   return checkpoint;
 }
 
@@ -94,11 +105,68 @@ test("receipt verification succeeds for unchanged evidence and fails after tampe
   );
 });
 
+test("verification rejects a private checkpoint ref that drifts from stored Git evidence", async () => {
+  const root = await createRepository();
+  const { config } = await initializeStore(root);
+  const checkpoint = checkpointFixture(root, config.currentSessionId);
+  checkpoint.id = "vt_git_verify_fixture";
+  checkpoint.receipt = createEvidenceReceipt(checkpoint);
+  anchorCheckpointRefs(root, checkpoint);
+  await saveCheckpoint(root, checkpoint);
+
+  const verifiedOut = memoryStream();
+  assert.equal(
+    await runVerify([checkpoint.id, "--json"], {
+      cwd: root,
+      stdout: verifiedOut,
+      stderr: memoryStream(),
+    }),
+    0,
+  );
+  const verified = JSON.parse(verifiedOut.value());
+  assert.equal(verified.valid, true);
+  assert.equal(verified.gitEvidence.length, 2);
+  assert.ok(
+    verified.gitEvidence.every(
+      (item) =>
+        item.objectStatus === "verified" && item.refStatus === "verified",
+    ),
+  );
+
+  await writeFile(join(root, "drift.txt"), "new commit\n", "utf8");
+  git(root, ["add", "drift.txt"]);
+  git(root, ["commit", "-m", "create unrelated drift commit"]);
+  const driftCommit = git(root, ["rev-parse", "HEAD"]);
+  git(root, [
+    "update-ref",
+    `refs/vibetrace/checkpoints/${checkpoint.id}/after`,
+    driftCommit,
+  ]);
+
+  const failedOut = memoryStream();
+  assert.equal(
+    await runVerify([checkpoint.id, "--json"], {
+      cwd: root,
+      stdout: failedOut,
+      stderr: memoryStream(),
+    }),
+    2,
+  );
+  const failed = JSON.parse(failedOut.value());
+  assert.equal(failed.valid, false);
+  assert.equal(failed.reason, "git-ref-mismatch");
+  const after = failed.gitEvidence.find((item) => item.phase === "after");
+  assert.equal(after.objectStatus, "verified");
+  assert.equal(after.refStatus, "mismatch");
+  assert.equal(after.actualRef, driftCommit);
+});
+
 test("verification reads visual files and rejects a replaced artifact", async () => {
   const root = await createRepository();
   const { config } = await initializeStore(root);
   const checkpoint = checkpointFixture(root, config.currentSessionId);
   checkpoint.id = "vt_visual_verify_fixture";
+  anchorCheckpointRefs(root, checkpoint);
 
   const artifactDirectory = join(storePaths(root).artifacts, checkpoint.id);
   await mkdir(artifactDirectory, { recursive: true });

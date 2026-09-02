@@ -1,3 +1,5 @@
+const RUNTIME_CONTRACT_ENV = "VIBETRACE_CHANGE_CONTRACT";
+
 function normalizePatterns(value) {
   if (!value) return [];
   const values = Array.isArray(value) ? value : String(value).split(",");
@@ -64,8 +66,37 @@ export function createChangeContract({
   return enabled ? contract : null;
 }
 
-export function evaluateChangeContract(contract, files = []) {
+export function setRuntimeChangeContract(contract) {
   if (!contract) {
+    delete process.env[RUNTIME_CONTRACT_ENV];
+    return;
+  }
+  process.env[RUNTIME_CONTRACT_ENV] = JSON.stringify(contract);
+}
+
+export function runtimeChangeContract() {
+  const raw = process.env[RUNTIME_CONTRACT_ENV];
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (
+      !parsed ||
+      parsed.version !== 1 ||
+      parsed.mode !== "explicit-user-authorization" ||
+      !Array.isArray(parsed.allow) ||
+      !Array.isArray(parsed.deny)
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function evaluateChangeContract(contract, files = []) {
+  const effectiveContract = contract || runtimeChangeContract();
+  if (!effectiveContract) {
     return {
       declared: false,
       status: "not-declared",
@@ -87,12 +118,13 @@ export function evaluateChangeContract(contract, files = []) {
   const unauthorizedFiles = [];
   const protectedFiles = [];
   const authorizedFiles = [];
-  const allowIsRestrictive = contract.allow.length > 0;
+  const allowIsRestrictive = effectiveContract.allow.length > 0;
 
   for (const file of files) {
     const path = file.path.replaceAll("\\", "/");
-    const denied = matchesAny(path, contract.deny);
-    const allowed = !allowIsRestrictive || matchesAny(path, contract.allow);
+    const denied = matchesAny(path, effectiveContract.deny);
+    const allowed =
+      !allowIsRestrictive || matchesAny(path, effectiveContract.allow);
     if (denied) protectedFiles.push(path);
     if (!allowed) unauthorizedFiles.push(path);
     if (!denied && allowed) authorizedFiles.push(path);
@@ -115,16 +147,22 @@ export function evaluateChangeContract(contract, files = []) {
     (sum, file) => sum + (file.additions || 0) + (file.deletions || 0),
     0,
   );
-  if (contract.maxFiles !== null && files.length > contract.maxFiles) {
+  if (
+    effectiveContract.maxFiles !== null &&
+    files.length > effectiveContract.maxFiles
+  ) {
     violations.push({
       id: "file-budget-exceeded",
-      detail: `${files.length} files changed; contract allows at most ${contract.maxFiles}`,
+      detail: `${files.length} files changed; contract allows at most ${effectiveContract.maxFiles}`,
     });
   }
-  if (contract.maxLines !== null && lines > contract.maxLines) {
+  if (
+    effectiveContract.maxLines !== null &&
+    lines > effectiveContract.maxLines
+  ) {
     violations.push({
       id: "line-budget-exceeded",
-      detail: `${lines} lines changed; contract allows at most ${contract.maxLines}`,
+      detail: `${lines} lines changed; contract allows at most ${effectiveContract.maxLines}`,
     });
   }
 

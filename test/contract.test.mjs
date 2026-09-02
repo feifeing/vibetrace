@@ -40,22 +40,38 @@ test("protected surfaces block sensitive files without repository-specific globs
   const result = evaluateChangeContract(contract, files);
   assert.equal(result.status, "violated");
   assert.deepEqual(result.protectedSurfacesTouched, [
+    "ci",
+    "dependencies",
     "auth",
     "database",
-    "dependencies",
-    "ci",
   ]);
   assert.deepEqual(result.protectedSurfaceFiles, [
-    "src/auth/session.ts",
-    "prisma/schema.prisma",
-    "package-lock.json",
     ".github/workflows/ci.yml",
+    "package-lock.json",
+    "prisma/schema.prisma",
+    "src/auth/session.ts",
   ]);
   assert.ok(
     result.violations.some(
       (violation) => violation.id === "protected-surface-touched",
     ),
   );
+});
+
+test("protected surface declaration is canonical regardless of input order", () => {
+  const first = createChangeContract({
+    protectedSurfaces: "auth,ci,database,dependencies",
+  });
+  const second = createChangeContract({
+    protectedSurfaces: "dependencies,database,ci,auth",
+  });
+  assert.deepEqual(first.protectedSurfaces, second.protectedSurfaces);
+  assert.deepEqual(first.protectedSurfaces, [
+    "ci",
+    "dependencies",
+    "auth",
+    "database",
+  ]);
 });
 
 test("protected surfaces are validated when the contract is declared", () => {
@@ -129,7 +145,9 @@ test("protected-surface violations feed the authorization-drift risk factor", ()
 
   assert.equal(analysis.contractCompliance.status, "violated");
   assert.equal(analysis.blastRadius.authorizationDrift, true);
-  assert.deepEqual(analysis.contractCompliance.protectedSurfacesTouched, ["auth"]);
+  assert.deepEqual(analysis.contractCompliance.protectedSurfacesTouched, [
+    "auth",
+  ]);
   assert.ok(
     analysis.risk.factors.some((factor) => factor.id === "authorization-drift"),
   );

@@ -2,10 +2,21 @@ import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
-import { createEvidenceReceipt, verifyEvidenceReceipt } from "../src/core/receipt.mjs";
-import { initializeStore, saveCheckpoint, storePaths } from "../src/core/store.mjs";
+import {
+  createEvidenceReceipt,
+  verifyEvidenceReceipt,
+} from "../src/core/receipt.mjs";
+import {
+  initializeStore,
+  saveCheckpoint,
+  storePaths,
+} from "../src/core/store.mjs";
 import { runVerify } from "../src/verify.mjs";
-import { createRepository, git, memoryStream } from "../test-support/helpers.mjs";
+import {
+  createRepository,
+  git,
+  memoryStream,
+} from "../test-support/helpers.mjs";
 
 function checkpointFixture(root, sessionId) {
   const head = git(root, ["rev-parse", "HEAD"]);
@@ -24,7 +35,11 @@ function checkpointFixture(root, sessionId) {
     analysis: {
       files: [],
       summary: { filesChanged: 0, linesChanged: 0, modulesChanged: 0 },
-      contractCompliance: { declared: false, status: "not-declared", violations: [] },
+      contractCompliance: {
+        declared: false,
+        status: "not-declared",
+        violations: [],
+      },
       blastRadius: { score: 0, level: "contained" },
       risk: { score: 0, level: "low", factors: [] },
     },
@@ -44,7 +59,10 @@ test("receipt verification succeeds for unchanged evidence and fails after tampe
 
   const stdout = memoryStream();
   const stderr = memoryStream();
-  assert.equal(await runVerify([checkpoint.id], { cwd: root, stdout, stderr }), 0);
+  assert.equal(
+    await runVerify([checkpoint.id], { cwd: root, stdout, stderr }),
+    0,
+  );
   assert.match(stdout.value(), /verified/u);
   assert.equal(stderr.value(), "");
 

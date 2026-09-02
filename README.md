@@ -15,40 +15,42 @@
 
 ![VibeTrace dashboard showing prompt intent, authorization drift, visual evidence, and blast radius](docs/vibetrace-dashboard.png)
 
-AI coding tools are very good at making changes. The difficult part is proving whether the resulting change stayed inside the boundary you intended to give them.
+AI coding tools are very good at making changes. The harder problem is proving whether the resulting change stayed inside the boundary you intended to give them.
 
 > “I asked for a button color. Why did the agent touch routing, auth, and twelve files?”
 
-VibeTrace treats three things as different evidence:
+VibeTrace keeps three kinds of evidence separate:
 
 ```text
 What you asked       → inferred intent
 What you authorized  → explicit change contract
-What happened        → Git + visual evidence
+What happened        → Git + optional visual evidence
 ```
 
-That distinction matters. A prompt can be ambiguous; an explicit authorization boundary is not.
+That distinction matters. A prompt is context. A declared change contract is permission. The resulting Git and visual state is evidence.
 
 VibeTrace is local-first, agent-agnostic, Git-compatible, and deliberately explainable. It does not generate code, replace Git, or hide review decisions behind an opaque AI confidence score.
 
 ## The core contribution
 
-Many existing tools already provide checkpoints, diffs, risk scoring, prompt history, path allowlists, visual regression, or blast-radius analysis. VibeTrace does **not** claim those primitives as inventions.
+Checkpoints, diffs, risk scoring, prompt history, path allowlists, visual regression, and blast-radius analysis all have prior art. VibeTrace does **not** claim those primitives as inventions.
 
-Its current technical contribution is the evidence model that keeps these layers separate:
+Its current technical contribution is a narrower evidence model:
 
-**Prompt Intent → Explicit Authorization → Observed Effect → Evidence Receipt**
+**Prompt Intent → Explicit Authorization → Observed Effect → Evidence Receipt → Verification**
 
-This enables two different questions to be answered independently:
+This lets VibeTrace answer two different questions independently:
 
 - **Intent mismatch:** did the observed change look broader than the prompt implied?
 - **Authorization drift:** did the observed change cross a boundary the user explicitly declared?
 
-The second is stronger evidence because it is based on permission, not language inference.
+Authorization drift is the stronger statement because it comes from a developer-declared rule, not natural-language inference.
 
-A completed checkpoint can also produce a deterministic SHA-256 **Evidence Receipt** binding the prompt hash, declared contract, Git before/after objects, analysis, and available visual hashes. The receipt is an integrity record — not an authorship signature and not a claim that the code is semantically correct.
+A completed checkpoint can also produce a deterministic SHA-256 **Evidence Receipt** binding the prompt hash, declared contract, Git before/after objects, analysis, and available visual hashes. Later, `vibetrace verify` recomputes that receipt and re-hashes local visual artifacts when they exist.
 
-## A practical example
+The receipt is an integrity record. It is **not** an authorship signature, an identity proof, or a claim that the code is semantically correct.
+
+## A practical workflow
 
 Start a checkpoint before the coding agent edits:
 
@@ -61,7 +63,7 @@ vibetrace checkpoint \
   --max-lines 80
 ```
 
-Let the agent work, then inspect and finish:
+Let the agent work, inspect the live impact, then finish:
 
 ```bash
 vibetrace diff
@@ -80,7 +82,7 @@ package.json
 ...
 ```
 
-VibeTrace can report:
+VibeTrace can preserve a result such as:
 
 ```text
 Prompt intent        UI/styles · likely small
@@ -93,17 +95,64 @@ Authorization drift  detected
 Evidence receipt     vtr_…
 ```
 
-No extra model is required to decide that `src/auth/**` violated an explicit `--deny` rule.
+No additional model is required to decide that `src/auth/**` violated an explicit `--deny` rule.
+
+## Verify captured evidence
+
+A receipt is only useful if it can be checked again later.
+
+```bash
+vibetrace verify
+```
+
+Verify a specific checkpoint or consume the result programmatically:
+
+```bash
+vibetrace verify vt_204718_a91f3c --json
+```
+
+Verification performs two independent checks:
+
+1. **Receipt recomputation** — rebuilds the deterministic receipt from the currently stored checkpoint evidence.
+2. **Visual artifact verification** — when before/after screenshots were captured, reads the actual local image files again and compares their SHA-256 hashes with the hashes recorded at capture time.
+
+This means VibeTrace can distinguish:
+
+```text
+verified            stored evidence still matches
+
+evidence-mismatch   checkpoint evidence changed after receipt creation
+artifact-mismatch   a captured image exists but its bytes changed
+artifact-missing    a captured image expected by the checkpoint is gone
+```
+
+`vibetrace verify` exits with status `0` when verification succeeds and `2` when the evidence does not match, so it can be used in scripts and CI.
+
+### Trust model
+
+VibeTrace currently provides **local integrity verification**, not a complete trust system.
+
+It can detect accidental or uncoordinated modification of captured evidence. It cannot stop an attacker who controls the local repository from rewriting both the evidence and its receipt. Cryptographic signatures and external trust anchors are deliberately separate future work.
+
+Verification also does **not** prove:
+
+- who authored the code;
+- which agent produced it;
+- that the original machine or browser environment was trustworthy;
+- that a screenshot is semantically correct;
+- that a change is safe merely because its receipt verifies.
+
+A verified receipt means something narrower and useful: **the evidence currently available to VibeTrace is internally consistent with the evidence that was bound into that receipt.**
 
 ## Why this is useful
 
 ### Review AI changes without guessing
 
-Normal Git diff answers **what changed**. VibeTrace adds the missing context: **what was requested and what was explicitly permitted**.
+Git diff answers **what changed**. VibeTrace adds **what was requested** and **what was explicitly permitted**.
 
 ### Put hard boundaries around soft prompts
 
-Natural language is fuzzy. A change contract turns “just tweak the hero” into auditable constraints such as allowed paths, protected paths, file budgets, and line budgets.
+Natural language is fuzzy. A change contract can turn “just tweak the hero” into auditable path constraints and file/line budgets.
 
 ### Preserve evidence without disturbing developer work
 
@@ -115,7 +164,7 @@ With the optional Playwright adapter, checkpoints can capture before/after scree
 
 ### Keep the reasoning inspectable
 
-Blast Radius and risk are deterministic review heuristics. Every point maps to a visible reason such as file spread, sensitive areas, line churn, prompt mismatch, or authorization drift.
+Blast Radius and risk are deterministic review heuristics. Every point maps to visible reasons such as file spread, sensitive areas, line churn, prompt mismatch, authorization drift, or unexpected visual movement.
 
 ## Try the interface
 
@@ -128,7 +177,7 @@ npm run dev
 
 Open [http://127.0.0.1:4173](http://127.0.0.1:4173).
 
-The demo makes the evidence chain visible as:
+The demo presents the evidence chain as:
 
 **Asked → Authorized → Observed → Evidence → Receipt**
 
@@ -156,7 +205,7 @@ vibetrace checkpoint \
   --max-files 5
 ```
 
-The contract is stored with the recording checkpoint. `vibetrace checkpoint --finish` restores that same authorization context even when it runs later in a separate process, evaluates the final change against it, and stores the resulting Evidence Receipt with the completed checkpoint.
+The contract is stored with the recording checkpoint. `vibetrace checkpoint --finish` restores the same authorization context even when it runs later in another CLI process, evaluates the final change against it, and stores the resulting Evidence Receipt.
 
 For an existing worktree change:
 
@@ -171,7 +220,7 @@ A clean worktree is rejected instead of generating a meaningless checkpoint.
 
 ## One-shot attestation
 
-For CI scripts or an existing set of changes, use the standalone attestation command:
+For scripts or an existing set of worktree changes:
 
 ```bash
 vibetrace attest \
@@ -206,35 +255,38 @@ vibetrace checkpoint --finish
 vibetrace report --open
 ```
 
-Each captured PNG is SHA-256 hashed so the artifact can participate in the Evidence Receipt.
+Each captured PNG is SHA-256 hashed at capture time and re-hashed by `vibetrace verify` when the local artifact is available.
 
-| Evidence layer       | v0.2 support | What it means                                |
-| -------------------- | ------------ | -------------------------------------------- |
-| Git objects          | Yes          | Stable before/after repository evidence      |
-| File + line scope    | Yes          | Normalized changed paths and churn           |
-| Contract compliance  | Yes          | Explicit authorization drift                 |
-| Pixel difference     | Yes          | Thresholded RGBA difference                  |
-| Layout change        | Basic        | Visible elements moved/resized/added/removed |
-| DOM change           | Basic        | DOM fingerprint + visible-node delta         |
-| Semantic correctness | **No**       | Requires stronger assertions or human review |
+| Evidence layer       | Capture | Verification  | Meaning                                      |
+| -------------------- | ------- | ------------- | -------------------------------------------- |
+| Git object IDs       | Yes     | Receipt       | Before/after repository object references    |
+| File + line scope    | Yes     | Receipt       | Normalized changed paths and churn           |
+| Contract compliance  | Yes     | Receipt       | Explicit authorization drift                 |
+| Screenshot bytes     | Yes     | **File hash** | Detect replaced or missing local PNGs        |
+| Pixel difference     | Yes     | Receipt       | Thresholded RGBA difference                  |
+| Layout change        | Basic   | Receipt       | Visible elements moved/resized/added/removed |
+| DOM change           | Basic   | Receipt       | DOM fingerprint + visible-node delta         |
+| Semantic correctness | **No**  | **No**        | Requires assertions or human review          |
 
 Browser output can vary by OS, browser build, fonts, and hardware. Compare visual captures from the same environment.
 
 ## CLI
 
-| Command                                 | What it does                                                  |
-| --------------------------------------- | ------------------------------------------------------------- |
-| `vibetrace init`                        | Initializes local VibeTrace state                             |
-| `vibetrace checkpoint --prompt "…"`     | Starts a two-phase before/after checkpoint                    |
-| `vibetrace checkpoint … --allow/--deny` | Starts a checkpoint with an explicit change contract          |
-| `vibetrace checkpoint --finish`         | Captures after state, evaluates evidence, stores a receipt    |
-| `vibetrace checkpoint --abort`          | Removes active checkpoint metadata/artifacts/private refs     |
-| `vibetrace diff [id]`                   | Shows live or saved Blast Radius and review evidence          |
-| `vibetrace diff --json`                 | Emits machine-readable analysis                               |
-| `vibetrace attest …`                    | Verifies current worktree changes against a declared contract |
-| `vibetrace replay`                      | Replays the current session timeline                          |
-| `vibetrace session new --name "…"`      | Starts a separate evidence timeline                           |
-| `vibetrace report [id]`                 | Generates a standalone local report                           |
+| Command                                 | What it does                                                    |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `vibetrace init`                        | Initializes local VibeTrace state                               |
+| `vibetrace checkpoint --prompt "…"`     | Starts a two-phase before/after checkpoint                      |
+| `vibetrace checkpoint … --allow/--deny` | Starts a checkpoint with an explicit change contract            |
+| `vibetrace checkpoint --finish`         | Captures after state, evaluates evidence, stores a receipt      |
+| `vibetrace checkpoint --abort`          | Removes active checkpoint metadata/artifacts/private refs       |
+| `vibetrace diff [id]`                   | Shows live or saved Blast Radius and review evidence            |
+| `vibetrace diff --json`                 | Emits machine-readable analysis                                 |
+| `vibetrace attest …`                    | Checks current worktree changes against a declared contract     |
+| `vibetrace verify [id]`                 | Recomputes the receipt and verifies local visual artifact bytes |
+| `vibetrace verify [id] --json`          | Emits machine-readable integrity verification                   |
+| `vibetrace replay`                      | Replays the current session timeline                            |
+| `vibetrace session new --name "…"`      | Starts a separate evidence timeline                             |
+| `vibetrace report [id]`                 | Generates a standalone local report                             |
 
 Change-contract options:
 
@@ -265,7 +317,7 @@ The real index, branch, and worktree are not rewritten by checkpoint capture.
 
 ## Explainable analysis
 
-The current deterministic model separates breadth from review priority:
+The deterministic model separates breadth from review priority:
 
 ```text
 Blast Radius = observed scope
@@ -287,16 +339,17 @@ Risk = file scope
 
 ## Architecture
 
-| Module                  | Responsibility                                             |
-| ----------------------- | ---------------------------------------------------------- |
-| `src/git/`              | Non-mutating snapshots and normalized Git evidence         |
-| `src/core/intent.mjs`   | Transparent prompt-scope inference                         |
-| `src/core/contract.mjs` | Explicit change authorization and compliance               |
-| `src/core/receipt.mjs`  | Deterministic evidence receipts                            |
-| `src/core/risk.mjs`     | Blast Radius, mismatch, authorization drift, risk          |
-| `src/core/store.mjs`    | Atomic checkpoint/session persistence and evidence binding |
-| `src/visual/`           | Optional screenshot, pixel, layout, DOM evidence           |
-| `src/report/` + `web/`  | Standalone evidence report                                 |
+| Module                  | Responsibility                                              |
+| ----------------------- | ----------------------------------------------------------- |
+| `src/git/`              | Non-mutating snapshots and normalized Git evidence          |
+| `src/core/intent.mjs`   | Transparent prompt-scope inference                          |
+| `src/core/contract.mjs` | Explicit change authorization and compliance                |
+| `src/core/receipt.mjs`  | Deterministic evidence receipts and receipt recomputation   |
+| `src/verify.mjs`        | Checkpoint and local visual-artifact integrity verification |
+| `src/core/risk.mjs`     | Blast Radius, mismatch, authorization drift, risk           |
+| `src/core/store.mjs`    | Atomic checkpoint/session persistence and evidence binding  |
+| `src/visual/`           | Optional screenshot, pixel, layout, DOM evidence            |
+| `src/report/` + `web/`  | Standalone evidence report                                  |
 
 ## What is implemented now
 
@@ -305,11 +358,15 @@ Risk = file scope
 - [x] Authorization Drift distinct from inferred Intent Mismatch
 - [x] Contract persistence across checkpoint start/finish processes
 - [x] Non-mutating Git before/after evidence
-- [x] Deterministic Evidence Receipts on completed guarded checkpoints
+- [x] Deterministic Evidence Receipts on completed checkpoints
+- [x] Receipt recomputation with `vibetrace verify`
+- [x] Detection of modified checkpoint evidence
+- [x] Re-hashing of local before/after screenshot files
+- [x] Detection of replaced or missing visual artifacts
 - [x] One-shot `attest` command for scripts
 - [x] Explainable Blast Radius and risk factors
 - [x] Sessions, replay, JSON output, standalone reports
-- [x] Optional Playwright screenshot evidence with image hashes
+- [x] Optional Playwright screenshot evidence
 - [x] Basic pixel/layout/DOM comparison
 - [x] Automated unit/CLI/browser CI
 
@@ -324,13 +381,15 @@ The distinctive design being developed here is the combination and separation of
 1. **inferred intent** — useful context, but not permission;
 2. **explicit authorization** — the developer's declared change boundary;
 3. **observed effect** — Git and optional visual evidence;
-4. **authorization drift** — evidence that the effect crossed that declared boundary; and
-5. **deterministic receipts** — a compact integrity record over the captured evidence.
+4. **authorization drift** — evidence that the effect crossed that boundary;
+5. **deterministic receipts** — a compact integrity record over captured evidence; and
+6. **verification** — recomputation plus direct re-hashing of local visual artifacts.
 
-See [Related work and differentiation boundary](docs/related-work.md) for the explicit non-novelty claims and design boundary.
+See [Related work and differentiation boundary](docs/related-work.md) for explicit non-novelty claims and the project's current design boundary.
 
 ## Roadmap
 
+- [ ] Verify continued availability of referenced Git evidence objects
 - [ ] Richer contract assertions beyond path/file/line budgets
 - [ ] Guarded restore with drift detection, dry-run, and explicit confirmation
 - [ ] Signed attestations layered on deterministic receipts
@@ -346,6 +405,8 @@ See [Related work and differentiation boundary](docs/related-work.md) for the ex
 **Declared boundaries outrank guesses.** Crossing an explicit protected path is stronger evidence than a heuristic mismatch.
 
 **Evidence before verdicts.** Preserve what happened before summarizing how risky it looks.
+
+**Verification should be inspectable.** A receipt that cannot be recomputed is just decoration.
 
 **Explainable before intelligent.** Review tooling should show why it raised a flag.
 

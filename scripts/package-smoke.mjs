@@ -19,7 +19,9 @@ function run(command, args, options = {}) {
 
 function runNpm(args, options = {}) {
   if (!npmCli) {
-    throw new Error("Package smoke requires npm_execpath from an npm-run context.");
+    throw new Error(
+      "Package smoke requires npm_execpath from an npm-run context.",
+    );
   }
   return run(process.execPath, [npmCli, ...args], options);
 }

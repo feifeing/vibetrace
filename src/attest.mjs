@@ -24,7 +24,11 @@ function parse(argv) {
       options[token] = true;
       continue;
     }
-    if (!["--prompt", "--allow", "--deny", "--max-files", "--max-lines"].includes(token)) {
+    if (
+      !["--prompt", "--allow", "--deny", "--max-files", "--max-lines"].includes(
+        token,
+      )
+    ) {
       throw new Error(`Unknown attest option: ${token}`);
     }
     const value = argv[++index];

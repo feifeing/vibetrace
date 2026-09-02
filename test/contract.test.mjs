@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createChangeContract, evaluateChangeContract } from "../src/core/contract.mjs";
+import {
+  createChangeContract,
+  evaluateChangeContract,
+} from "../src/core/contract.mjs";
 import { createEvidenceReceipt } from "../src/core/receipt.mjs";
 import { analyzeChangeSet } from "../src/core/risk.mjs";
 

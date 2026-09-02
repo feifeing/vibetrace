@@ -7,6 +7,54 @@ if (!checkpointId || !impactPanel || !riskSection) {
   throw new Error("VibeTrace authorization UI could not find its host elements.");
 }
 
+const demoAuthorization = {
+  "204718_a91f3c": {
+    authorization: {
+      allow: ["src/ui/**", "src/styles/**"],
+      deny: ["src/auth/**", "src/router/**"],
+      maxFiles: 3,
+      maxLines: 80,
+    },
+    analysis: {
+      contractCompliance: {
+        declared: true,
+        status: "violated",
+        violations: [
+          { detail: "Protected auth/router paths changed and the 3-file budget was exceeded." },
+        ],
+      },
+    },
+    receipt: { receiptId: "vtr_4f71a9c83e16d52a3f308cf0" },
+  },
+  "203229_8d0c42": {
+    authorization: {
+      allow: ["src/marketing/**", "src/styles/**"],
+      deny: ["src/auth/**"],
+      maxFiles: 5,
+      maxLines: 180,
+    },
+    analysis: {
+      contractCompliance: {
+        declared: true,
+        status: "compliant",
+        violations: [],
+      },
+    },
+    receipt: { receiptId: "vtr_16bbac216de20b8c011197d2" },
+  },
+  "201104_4b23a8": {
+    authorization: null,
+    analysis: {
+      contractCompliance: {
+        declared: false,
+        status: "not-declared",
+        violations: [],
+      },
+    },
+    receipt: { receiptId: "vtr_013e7f2c766593b63dc1d3ae" },
+  },
+};
+
 const card = document.createElement("section");
 card.className = "authorization-section";
 card.setAttribute("aria-labelledby", "authorization-title");
@@ -22,39 +70,23 @@ function escapeHtml(value) {
   );
 }
 
+function displayedCheckpointKey() {
+  return checkpointId.textContent.trim().replace(/^#/u, "");
+}
+
 function currentCheckpoint() {
-  const displayed = checkpointId.textContent.trim().replace(/^#/u, "");
+  const displayed = displayedCheckpointKey();
   if (reportData?.checkpoints?.length) {
     return reportData.checkpoints.find(
       (checkpoint) => checkpoint.id.replace(/^vt_/u, "") === displayed,
     );
   }
-
-  return {
-    authorization: {
-      allow: ["src/components/**", "src/styles/**"],
-      deny: ["src/auth/**", "src/router/**"],
-      maxFiles: 3,
-      maxLines: 80,
-    },
-    analysis: {
-      contractCompliance: {
-        declared: true,
-        status: "violated",
-        protectedFiles: ["src/auth/session.ts", "src/router/index.ts"],
-        unauthorizedFiles: ["src/auth/session.ts", "src/router/index.ts", "package.json"],
-        violations: [
-          { detail: "The observed change crossed explicitly protected paths." },
-          { detail: "12 changed files exceeded the declared 3-file budget." },
-        ],
-      },
-    },
-    receipt: { receiptId: "vtr_4f71a9c83e16d52a3f308cf0" },
-  };
+  return demoAuthorization[displayed] || demoAuthorization["204718_a91f3c"];
 }
 
 function patterns(values, empty) {
-  if (!values?.length) return `<span class="contract-empty">${escapeHtml(empty)}</span>`;
+  if (!values?.length)
+    return `<span class="contract-empty">${escapeHtml(empty)}</span>`;
   return values
     .slice(0, 3)
     .map((value) => `<code>${escapeHtml(value)}</code>`)
@@ -74,7 +106,9 @@ function renderAuthorization() {
         <span class="contract-status undeclared">OPTIONAL</span>
       </div>
       <p class="contract-copy">No explicit boundary was declared for this checkpoint. Intent mismatch remains heuristic evidence only.</p>
-      <div class="contract-hint"><span>+</span><code>--allow "src/ui/**" --deny "src/auth/**" --max-files 3</code></div>`;
+      <div class="contract-hint"><span>+</span><code>--allow "src/ui/**" --deny "src/auth/**" --max-files 3</code></div>
+      ${receipt?.receiptId ? `<button class="receipt-chip" type="button"><span>EVIDENCE RECEIPT</span><code>${escapeHtml(receipt.receiptId)}</code></button>` : ""}`;
+    bindReceipt(receipt);
     return;
   }
 
@@ -99,22 +133,45 @@ function renderAuthorization() {
       <span>${violated ? "AUTHORIZATION DRIFT" : "AUTHORIZED SCOPE HELD"}</span>
       <strong>${escapeHtml(violation || "Observed files stayed inside the explicit change contract.")}</strong>
     </div>
-    ${receipt?.receiptId ? `<button class="receipt-chip" type="button" title="Evidence receipt"><span>EVIDENCE RECEIPT</span><code>${escapeHtml(receipt.receiptId)}</code></button>` : ""}`;
+    ${receipt?.receiptId ? `<button class="receipt-chip" type="button"><span>EVIDENCE RECEIPT</span><code>${escapeHtml(receipt.receiptId)}</code></button>` : ""}`;
 
+  bindReceipt(receipt);
+}
+
+function bindReceipt(receipt) {
   const receiptButton = card.querySelector(".receipt-chip");
-  if (receiptButton) {
-    receiptButton.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(receipt.receiptId);
-        receiptButton.classList.add("copied");
-        setTimeout(() => receiptButton.classList.remove("copied"), 1200);
-      } catch {
-        receiptButton.title = receipt.receiptId;
-      }
-    });
-  }
+  if (!receiptButton || !receipt?.receiptId) return;
+  receiptButton.title = "Copy evidence receipt";
+  receiptButton.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(receipt.receiptId);
+      receiptButton.classList.add("copied");
+      setTimeout(() => receiptButton.classList.remove("copied"), 1200);
+    } catch {
+      receiptButton.title = receipt.receiptId;
+    }
+  });
+}
+
+function replaceQuickStartCopy() {
+  const oldButton = document.getElementById("copyCommand");
+  if (!oldButton) return;
+  const replacement = oldButton.cloneNode(true);
+  oldButton.replaceWith(replacement);
+  replacement.addEventListener("click", async () => {
+    const command =
+      'vibetrace checkpoint --prompt "Change the button color" --allow "src/components/**,src/styles/**" --deny "src/auth/**" --max-files 3';
+    try {
+      await navigator.clipboard.writeText(command);
+      replacement.textContent = "Copied";
+      setTimeout(() => (replacement.textContent = "Copy command"), 1200);
+    } catch {
+      replacement.title = command;
+    }
+  });
 }
 
 const observer = new MutationObserver(renderAuthorization);
 observer.observe(checkpointId, { childList: true, characterData: true, subtree: true });
 renderAuthorization();
+replaceQuickStartCopy();

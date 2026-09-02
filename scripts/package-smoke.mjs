@@ -34,7 +34,11 @@ try {
       cwd: root,
     }),
   );
-  assert.equal(packOutput.length, 1, "npm pack should produce exactly one tarball");
+  assert.equal(
+    packOutput.length,
+    1,
+    "npm pack should produce exactly one tarball",
+  );
 
   const packed = packOutput[0];
   const paths = packed.files.map((file) => file.path);
@@ -66,12 +70,23 @@ try {
   await mkdir(consumer, { recursive: true });
   await writeFile(
     join(consumer, "package.json"),
-    JSON.stringify({ name: "vibetrace-package-consumer", private: true }, null, 2),
+    JSON.stringify(
+      { name: "vibetrace-package-consumer", private: true },
+      null,
+      2,
+    ),
     "utf8",
   );
   run(
     npm,
-    ["install", "--ignore-scripts", "--omit=dev", "--no-audit", "--no-fund", tarball],
+    [
+      "install",
+      "--ignore-scripts",
+      "--omit=dev",
+      "--no-audit",
+      "--no-fund",
+      tarball,
+    ],
     { cwd: consumer },
   );
 
@@ -106,7 +121,11 @@ try {
   runCli(cli, project, ["checkpoint", "--finish"]);
 
   const verification = JSON.parse(runCli(cli, project, ["verify", "--json"]));
-  assert.equal(verification.valid, true, "packed CLI should verify its checkpoint");
+  assert.equal(
+    verification.valid,
+    true,
+    "packed CLI should verify its checkpoint",
+  );
 
   const preview = runCli(cli, project, ["restore", "--json"]);
   assert.equal(JSON.parse(preview).canApply, true);

@@ -84,7 +84,8 @@ export function verifyEvidenceReceipt(checkpoint) {
     };
   }
   const idMatches = stored.receiptId === recomputed.receiptId;
-  const evidenceMatches = sha256(stored.evidence) === sha256(recomputed.evidence);
+  const evidenceMatches =
+    sha256(stored.evidence) === sha256(recomputed.evidence);
   return {
     valid: idMatches && evidenceMatches,
     reason: idMatches && evidenceMatches ? "verified" : "evidence-mismatch",

@@ -28,7 +28,10 @@ export function createEvidenceReceipt(checkpoint) {
       source: checkpoint.prompt?.source || null,
     },
     authorization: checkpoint.authorization
-      ? { sha256: sha256(checkpoint.authorization), contract: checkpoint.authorization }
+      ? {
+          sha256: sha256(checkpoint.authorization),
+          contract: checkpoint.authorization,
+        }
       : null,
     git: {
       headAtStart: checkpoint.repository?.head || null,

@@ -1,0 +1,23 @@
+name: Restore format preview
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Print restore Prettier diff
+        run: |
+          npx prettier --write src/git/restore.mjs src/restore.mjs test/restore.test.mjs
+          git diff --no-color -- src/git/restore.mjs src/restore.mjs test/restore.test.mjs

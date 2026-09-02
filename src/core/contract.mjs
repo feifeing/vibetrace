@@ -1,11 +1,32 @@
-import { moduleForPath } from "./classify.mjs";
+import { classifyFile, moduleForPath } from "./classify.mjs";
 
 const RUNTIME_CONTRACT_ENV = "VIBETRACE_CHANGE_CONTRACT";
+const PROTECTABLE_SURFACES = new Set([
+  "ci",
+  "dependencies",
+  "auth",
+  "database",
+  "routing",
+  "public-api",
+  "global-styles",
+  "config",
+]);
 
 function normalizePatterns(value) {
   if (!value) return [];
   const values = Array.isArray(value) ? value : String(value).split(",");
   return values.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function normalizeSurfaces(value) {
+  const surfaces = normalizePatterns(value).map((item) => item.toLowerCase());
+  const unknown = surfaces.filter((surface) => !PROTECTABLE_SURFACES.has(surface));
+  if (unknown.length > 0) {
+    throw new Error(
+      `Unknown protected surface(s): ${unknown.join(", ")}. Supported surfaces: ${[...PROTECTABLE_SURFACES].join(", ")}.`,
+    );
+  }
+  return [...new Set(surfaces)];
 }
 
 function escapeRegex(value) {
@@ -57,6 +78,7 @@ function modulesForFiles(files) {
 export function createChangeContract({
   allow = [],
   deny = [],
+  protectedSurfaces = [],
   maxFiles = null,
   maxLines = null,
   maxModules = null,
@@ -66,6 +88,7 @@ export function createChangeContract({
     mode: "explicit-user-authorization",
     allow: normalizePatterns(allow),
     deny: normalizePatterns(deny),
+    protectedSurfaces: normalizeSurfaces(protectedSurfaces),
     maxFiles: finiteLimit(maxFiles),
     maxLines: finiteLimit(maxLines),
     maxModules: finiteLimit(maxModules),
@@ -73,6 +96,7 @@ export function createChangeContract({
   const enabled =
     contract.allow.length > 0 ||
     contract.deny.length > 0 ||
+    contract.protectedSurfaces.length > 0 ||
     contract.maxFiles !== null ||
     contract.maxLines !== null ||
     contract.maxModules !== null;
@@ -122,6 +146,8 @@ export function evaluateChangeContract(contract, files = []) {
       authorizedFiles: files.map((file) => file.path),
       unauthorizedFiles: [],
       protectedFiles: [],
+      protectedSurfaceFiles: [],
+      protectedSurfacesTouched: [],
       totals: {
         files: files.length,
         lines,
@@ -132,24 +158,51 @@ export function evaluateChangeContract(contract, files = []) {
 
   const violations = [];
   const unauthorizedFiles = [];
-  const protectedFiles = [];
+  const pathProtectedFiles = [];
+  const protectedFiles = new Set();
+  const protectedSurfaceFiles = new Set();
+  const protectedSurfaceHits = new Map();
   const authorizedFiles = [];
   const allowIsRestrictive = effectiveContract.allow.length > 0;
+  const protectedSurfaces = new Set(effectiveContract.protectedSurfaces || []);
 
   for (const file of files) {
     const path = file.path.replaceAll("\\", "/");
     const denied = matchesAny(path, effectiveContract.deny);
     const allowed =
       !allowIsRestrictive || matchesAny(path, effectiveContract.allow);
-    if (denied) protectedFiles.push(path);
+    const signals = file.signals || classifyFile(path).signals;
+    const matchedSurfaces = signals.filter((signal) => protectedSurfaces.has(signal));
+
+    if (denied) {
+      pathProtectedFiles.push(path);
+      protectedFiles.add(path);
+    }
     if (!allowed) unauthorizedFiles.push(path);
-    if (!denied && allowed) authorizedFiles.push(path);
+    if (matchedSurfaces.length > 0) {
+      protectedFiles.add(path);
+      protectedSurfaceFiles.add(path);
+      for (const surface of matchedSurfaces) {
+        if (!protectedSurfaceHits.has(surface)) protectedSurfaceHits.set(surface, []);
+        protectedSurfaceHits.get(surface).push(path);
+      }
+    }
+    if (!denied && allowed && matchedSurfaces.length === 0) authorizedFiles.push(path);
   }
 
-  if (protectedFiles.length > 0) {
+  if (pathProtectedFiles.length > 0) {
     violations.push({
       id: "protected-path-touched",
-      detail: `${protectedFiles.length} protected path(s) changed: ${protectedFiles.join(", ")}`,
+      detail: `${pathProtectedFiles.length} protected path(s) changed: ${pathProtectedFiles.join(", ")}`,
+    });
+  }
+  if (protectedSurfaceHits.size > 0) {
+    const detail = [...protectedSurfaceHits.entries()]
+      .map(([surface, paths]) => `${surface}: ${paths.join(", ")}`)
+      .join("; ");
+    violations.push({
+      id: "protected-surface-touched",
+      detail: `${protectedSurfaceHits.size} protected surface(s) changed: ${detail}`,
     });
   }
   if (unauthorizedFiles.length > 0) {
@@ -196,7 +249,11 @@ export function evaluateChangeContract(contract, files = []) {
     violations,
     authorizedFiles,
     unauthorizedFiles,
-    protectedFiles,
+    protectedFiles: [...protectedFiles],
+    protectedSurfaceFiles: [...protectedSurfaceFiles],
+    protectedSurfacesTouched: [...protectedSurfaceHits.keys()],
     totals: { files: files.length, lines, modules: modules.size },
   };
 }
+
+export const PROTECTED_SURFACES = [...PROTECTABLE_SURFACES];

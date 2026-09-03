@@ -63,7 +63,9 @@ function printHuman(stdout, result) {
     );
   }
   for (const budget of Object.values(result.delta.budgets).filter(Boolean)) {
-    stdout.write(`  budget     ${budget.field}: ${budget.from} → ${budget.to}\n`);
+    stdout.write(
+      `  budget     ${budget.field}: ${budget.from} → ${budget.to}\n`,
+    );
   }
   for (const blocker of result.blockers) {
     stdout.write(`  review     ${blocker.id}\n`);
@@ -79,7 +81,11 @@ function printHuman(stdout, result) {
 
 export async function runContractDelta(
   argv,
-  { cwd = process.cwd(), stdout = process.stdout, stderr = process.stderr } = {},
+  {
+    cwd = process.cwd(),
+    stdout = process.stdout,
+    stderr = process.stderr,
+  } = {},
 ) {
   try {
     const options = parse(argv);
@@ -88,7 +94,10 @@ export async function runContractDelta(
       return 0;
     }
     const root = findRepositoryRoot(cwd);
-    const checkpoint = resolveCheckpoint(await listCheckpoints(root), options.token);
+    const checkpoint = resolveCheckpoint(
+      await listCheckpoints(root),
+      options.token,
+    );
     const observedFiles = collectCommitDiff(
       root,
       checkpoint.before.commit,
@@ -97,7 +106,9 @@ export async function runContractDelta(
     const result = computeObservedContractDelta(checkpoint, observedFiles);
     if (options.json) stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     else printHuman(stdout, result);
-    return ["human-review-required", "incomplete-proposal"].includes(result.status)
+    return ["human-review-required", "incomplete-proposal"].includes(
+      result.status,
+    )
       ? 2
       : 0;
   } catch (error) {

@@ -111,6 +111,12 @@ test("generated reports derive review evidence from receipt-bound Git objects", 
   const rendered = payload.checkpoints[0];
 
   assert.equal(rendered.review.sourceReceipt.valid, true);
+  assert.equal(rendered.review.sourceReceipt.coverage.evidenceVersion, 2);
+  assert.equal(rendered.review.sourceReceipt.coverage.fileManifestBound, true);
+  assert.equal(
+    rendered.review.sourceReceipt.coverage.scope,
+    "effect-manifest-v2",
+  );
   assert.equal(rendered.review.gitEffect.recomputed, true);
   assert.equal(rendered.review.gitEffect.files, 2);
   assert.equal(rendered.review.contractDelta.status, "proposal-ready");

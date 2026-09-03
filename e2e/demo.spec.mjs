@@ -42,6 +42,7 @@ test("the evidence workspace replays authority, review, and disclosure evidence"
   await expect(page.locator(".trust-card")).toContainText(
     "recomputed from objects",
   );
+  await expect(page.locator(".trust-card")).toContainText("effect-manifest-v2");
   await expect(page.locator(".disclosure-card")).toContainText(
     "This browser report is not a share-safe Capsule.",
   );

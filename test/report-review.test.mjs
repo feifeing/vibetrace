@@ -202,8 +202,5 @@ test("report review plane invalidates a historical review when its source receip
   assert.equal(review.disclosure.reason, "source-receipt-unverified");
   assert.equal(review.gitEffect.recomputed, false);
   assert.equal(review.historicalEffectReview.status, "invalid");
-  assert.equal(
-    review.historicalEffectReview.sourceReceiptCurrent.valid,
-    false,
-  );
+  assert.equal(review.historicalEffectReview.sourceReceiptCurrent.valid, false);
 });

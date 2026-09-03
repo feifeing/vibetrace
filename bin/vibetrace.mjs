@@ -65,6 +65,9 @@ try {
   } else if (process.argv[2] === "restore") {
     const { runRestore } = await import("../src/restore.mjs");
     process.exitCode = await runRestore(process.argv.slice(3));
+  } else if (process.argv[2] === "capsule") {
+    const { runCapsule } = await import("../src/capsule.mjs");
+    process.exitCode = await runCapsule(process.argv.slice(3));
   } else {
     const argv = await applyCheckpointContract(process.argv.slice(2));
     const { runCli } = await import("../src/cli.mjs");

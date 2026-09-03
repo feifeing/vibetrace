@@ -45,7 +45,11 @@ async function createViolatedCheckpoint(root) {
     "1",
   ]);
   await writeFile(join(root, "app.js"), "export const value = 2;\n", "utf8");
-  await writeFile(join(root, "extra.js"), "export const extra = true;\n", "utf8");
+  await writeFile(
+    join(root, "extra.js"),
+    "export const extra = true;\n",
+    "utf8",
+  );
   run(root, ["checkpoint", "--finish"]);
 }
 
@@ -107,7 +111,9 @@ test("tampered review records fail verification", async (context) => {
   context.after(() => rm(root, { recursive: true, force: true }));
   await createViolatedCheckpoint(root);
 
-  const created = JSON.parse(run(root, ["review", "--reject-effect", "--json"]));
+  const created = JSON.parse(
+    run(root, ["review", "--reject-effect", "--json"]),
+  );
   const reviewPath = join(
     root,
     ".vibetrace",

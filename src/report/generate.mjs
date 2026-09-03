@@ -77,7 +77,10 @@ function buildReviewEvidence(root, checkpoint) {
         observedFiles,
       );
     } catch (error) {
-      review.contractDelta = unavailable("contract-delta-failed", error.message);
+      review.contractDelta = unavailable(
+        "contract-delta-failed",
+        error.message,
+      );
     }
   }
 

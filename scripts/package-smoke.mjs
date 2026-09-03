@@ -61,6 +61,8 @@ try {
     "src/cli.mjs",
     "README.md",
     "LICENSE",
+    "LEGAL.md",
+    "THIRD_PARTY_NOTICES.md",
   ]) {
     assert.ok(paths.includes(required), `package is missing ${required}`);
   }

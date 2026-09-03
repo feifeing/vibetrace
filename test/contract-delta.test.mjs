@@ -70,7 +70,10 @@ async function createTwoModuleCheckpoint() {
   const before = git(root, ["rev-parse", "HEAD"]);
   await mkdir(join(root, "src", "ui"), { recursive: true });
   await mkdir(join(root, "src", "utils"), { recursive: true });
-  await writeFile(join(root, "src", "ui", "button.js"), "export const ui = 1;\n");
+  await writeFile(
+    join(root, "src", "ui", "button.js"),
+    "export const ui = 1;\n",
+  );
   await writeFile(
     join(root, "src", "utils", "helper.js"),
     "export const helper = 1;\n",
@@ -216,5 +219,8 @@ test("proposal receipt is deterministic for the same normalized Git effect", asy
   ];
   const first = computeObservedContractDelta(checkpoint, files);
   const second = computeObservedContractDelta(checkpoint, [...files].reverse());
-  assert.equal(first.proposalReceipt.receiptId, second.proposalReceipt.receiptId);
+  assert.equal(
+    first.proposalReceipt.receiptId,
+    second.proposalReceipt.receiptId,
+  );
 });

@@ -31,7 +31,9 @@ export function createHistoricalEffectReview({
   reviewerLabel = null,
 }) {
   if (!checkpoint?.receipt?.receiptId) {
-    throw new Error("A completed checkpoint with an Evidence Receipt is required.");
+    throw new Error(
+      "A completed checkpoint with an Evidence Receipt is required.",
+    );
   }
   if (!DISPOSITIONS.has(disposition)) {
     throw new Error(`Unsupported review disposition: ${disposition}.`);

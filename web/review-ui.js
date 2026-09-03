@@ -221,7 +221,7 @@ function renderDelta(delta) {
     ? grants
         .map(
           (grant) =>
-            `<li><span>ALLOW +</span><code>${escapeHtml(grant.path)}</code>${grant.representable === false ? '<em>cannot safely express</em>' : ""}</li>`,
+            `<li><span>ALLOW +</span><code>${escapeHtml(grant.path)}</code>${grant.representable === false ? "<em>cannot safely express</em>" : ""}</li>`,
         )
         .join("")
     : '<li class="quiet"><span>ALLOW +</span><strong>No path grant needed</strong></li>';
@@ -340,7 +340,8 @@ async function copyValue(button) {
     if (button.matches(".review-command button")) button.textContent = "Copied";
     else button.classList.add("copied");
     setTimeout(() => {
-      if (button.matches(".review-command button")) button.textContent = previous;
+      if (button.matches(".review-command button"))
+        button.textContent = previous;
       else button.classList.remove("copied");
     }, 1200);
   } catch {

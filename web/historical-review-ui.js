@@ -3,7 +3,9 @@ const checkpointId = document.getElementById("checkpointId");
 const reviewPlane = document.getElementById("reviewPlane");
 
 if (!checkpointId || !reviewPlane) {
-  throw new Error("VibeTrace historical review UI could not find its host elements.");
+  throw new Error(
+    "VibeTrace historical review UI could not find its host elements.",
+  );
 }
 
 const demoHistoricalReviews = {
@@ -29,8 +31,7 @@ const demoHistoricalReviews = {
     },
     sourceReceiptCurrent: { valid: true, reason: "verified" },
     reportVerificationScope: "record-integrity-plus-source-receipt",
-    fullVerifyCommand:
-      "vibetrace review --verify vrr_61d1ad8d769fa25cc28d829a",
+    fullVerifyCommand: "vibetrace review --verify vrr_61d1ad8d769fa25cc28d829a",
     authorityBoundary: {
       historicalEffectOnly: true,
       changeContractMutated: false,
@@ -59,8 +60,7 @@ const demoHistoricalReviews = {
     },
     sourceReceiptCurrent: { valid: true, reason: "verified" },
     reportVerificationScope: "record-integrity-plus-source-receipt",
-    fullVerifyCommand:
-      "vibetrace review --verify vrr_4b72c436cdac2f91b702b975",
+    fullVerifyCommand: "vibetrace review --verify vrr_4b72c436cdac2f91b702b975",
     authorityBoundary: {
       historicalEffectOnly: true,
       changeContractMutated: false,
@@ -168,7 +168,10 @@ function renderNotRecorded(checkpoint, historical) {
 function renderInvalid(historical) {
   const latest = historical?.latest;
   const recordId = latest?.record?.recordId || "unknown review record";
-  const reason = latest?.integrity?.reason || historical?.sourceReceiptCurrent?.reason || "verification failed";
+  const reason =
+    latest?.integrity?.reason ||
+    historical?.sourceReceiptCurrent?.reason ||
+    "verification failed";
   return `
     <div class="history-empty invalid">
       <span class="history-status invalid">INVALID</span>
@@ -187,7 +190,8 @@ function renderLinked(historical) {
   const reviewer = record.reviewerLabel || "not recorded";
   const note = record.note || "No local review note was recorded.";
   const command =
-    historical.fullVerifyCommand || `vibetrace review --verify ${record.recordId}`;
+    historical.fullVerifyCommand ||
+    `vibetrace review --verify ${record.recordId}`;
 
   return `
     <div class="history-outcome">
@@ -237,7 +241,8 @@ function renderHistoricalReview() {
   };
   let body;
   if (historical.status === "invalid") body = renderInvalid(historical);
-  else if (historical.status === "record-linked") body = renderLinked(historical);
+  else if (historical.status === "record-linked")
+    body = renderLinked(historical);
   else body = renderNotRecorded(checkpoint, historical);
 
   const existing = grid.querySelector(".historical-review-card");

@@ -5,7 +5,7 @@ import { verifyEvidenceReceipt } from "./core/receipt.mjs";
 import { listCheckpoints } from "./core/store.mjs";
 import { findRepositoryRoot, runGit } from "./git/git.mjs";
 
-const HELP = `vibetrace verify [checkpoint] [--json]\n\nRecompute a completed checkpoint's Evidence Receipt and verify referenced Git/visual evidence when present.\nThe command exits 0 when evidence verifies and 2 when metadata, Git evidence, or artifact evidence no longer matches.\n\nOptions:\n  --json     Emit machine-readable verification output\n  -h, --help Show help`;
+const HELP = `vibetrace verify [checkpoint] [--json]\n\nRecompute a completed checkpoint's Evidence Receipt and verify referenced Git/visual evidence when present.\nThe command exits 0 when evidence verifies and 2 when metadata, Git evidence, or artifact evidence no longer matches. Receipt coverage is versioned; legacy v1 receipts remain verifiable with their original, narrower scope.\n\nOptions:\n  --json     Emit machine-readable verification output\n  -h, --help Show help`;
 
 function parse(argv) {
   const options = new Set();
@@ -127,6 +127,18 @@ function verificationReason(receipt, gitEvidence, artifacts) {
   return "verified";
 }
 
+function writeCoverage(stdout, receipt) {
+  const coverage = receipt.coverage;
+  if (!coverage) return;
+  if (coverage.evidenceVersion === 1) {
+    stdout.write(
+      "coverage legacy-v1 · file manifest / intent analysis / visual analysis not bound\n",
+    );
+    return;
+  }
+  stdout.write(`coverage ${coverage.scope}\n`);
+}
+
 export async function runVerify(argv = process.argv.slice(3), io = {}) {
   const stdout = io.stdout || process.stdout;
   const stderr = io.stderr || process.stderr;
@@ -165,6 +177,7 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
     } else if (valid) {
       stdout.write(`verified ${checkpoint.id}\n`);
       stdout.write(`receipt  ${receipt.actualReceiptId}\n`);
+      writeCoverage(stdout, receipt);
       if (gitEvidence.length > 0)
         stdout.write(
           `git      ${gitEvidence.length} snapshot ref(s) verified\n`,
@@ -179,6 +192,7 @@ export async function runVerify(argv = process.argv.slice(3), io = {}) {
         stdout.write(`stored   ${receipt.actualReceiptId}\n`);
       if (receipt.expectedReceiptId)
         stdout.write(`current  ${receipt.expectedReceiptId}\n`);
+      writeCoverage(stdout, receipt);
       for (const item of gitEvidence.filter(
         (candidate) =>
           candidate.objectStatus !== "verified" ||

@@ -1,10 +1,12 @@
-import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import {
   createHistoricalEffectReview,
   verifyHistoricalEffectReview,
 } from "./core/review-record.mjs";
-import { listCheckpoints, storePaths } from "./core/store.mjs";
+import {
+  listHistoricalEffectReviews,
+  saveHistoricalEffectReview,
+} from "./core/review-store.mjs";
+import { listCheckpoints } from "./core/store.mjs";
 import { findRepositoryRoot } from "./git/git.mjs";
 import { runVerify } from "./verify.mjs";
 
@@ -69,35 +71,6 @@ function parse(argv) {
     throw new Error(`Unexpected argument: ${positionals[1]}`);
   }
   return { checkpoint: positionals[0] || null, options };
-}
-
-function reviewDirectory(root) {
-  return join(storePaths(root).directory, "reviews");
-}
-
-async function writeJsonAtomic(path, value) {
-  const temporary = `${path}.${process.pid}.tmp`;
-  await writeFile(temporary, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-  await rename(temporary, path);
-}
-
-async function listReviewRecords(root) {
-  const directory = reviewDirectory(root);
-  let names = [];
-  try {
-    names = (await readdir(directory)).filter((name) => name.endsWith(".json"));
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
-
-  const records = await Promise.all(
-    names.map(async (name) =>
-      JSON.parse(await readFile(join(directory, name), "utf8")),
-    ),
-  );
-  return records.sort((left, right) =>
-    String(right.recordedAt).localeCompare(String(left.recordedAt)),
-  );
 }
 
 function resolveCheckpoint(checkpoints, token) {
@@ -204,7 +177,7 @@ export async function runReview(argv = process.argv.slice(3), io = {}) {
           "--list cannot be combined with a review decision or --verify.",
         );
       }
-      let records = await listReviewRecords(root);
+      let records = await listHistoricalEffectReviews(root);
       if (parsed.checkpoint) {
         const checkpoint = resolveCheckpoint(checkpoints, parsed.checkpoint);
         records = records.filter(
@@ -232,7 +205,7 @@ export async function runReview(argv = process.argv.slice(3), io = {}) {
         );
       }
       const record = resolveReview(
-        await listReviewRecords(root),
+        await listHistoricalEffectReviews(root),
         parsed.options["--verify"],
       );
       const checkpoint = resolveCheckpoint(checkpoints, record.checkpointId);
@@ -306,9 +279,7 @@ export async function runReview(argv = process.argv.slice(3), io = {}) {
       note: parsed.options["--note"],
       reviewerLabel: parsed.options["--reviewer"],
     });
-    const directory = reviewDirectory(root);
-    await mkdir(directory, { recursive: true });
-    await writeJsonAtomic(join(directory, `${record.recordId}.json`), record);
+    await saveHistoricalEffectReview(root, record);
 
     const result = {
       created: true,

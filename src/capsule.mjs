@@ -5,10 +5,7 @@ import {
   createDisclosurePolicy,
   verifyDisclosureCapsule,
 } from "./core/disclosure.mjs";
-import {
-  listCheckpoints,
-  storePaths,
-} from "./core/store.mjs";
+import { listCheckpoints, storePaths } from "./core/store.mjs";
 import { findRepositoryRoot } from "./git/git.mjs";
 
 const HELP = `vibetrace capsule [checkpoint] [options]
@@ -66,7 +63,9 @@ function parse(argv) {
       options.includePaths ||
       options.includeContract)
   ) {
-    throw new Error("--verify cannot be combined with capsule creation options.");
+    throw new Error(
+      "--verify cannot be combined with capsule creation options.",
+    );
   }
 
   return { checkpoint: positionals[0] || null, options };
@@ -110,7 +109,11 @@ async function verifyFile(path, stdout, json) {
 
 export async function runCapsule(
   argv,
-  { cwd = process.cwd(), stdout = process.stdout, stderr = process.stderr } = {},
+  {
+    cwd = process.cwd(),
+    stdout = process.stdout,
+    stderr = process.stderr,
+  } = {},
 ) {
   try {
     const { checkpoint: token, options } = parse(argv);
@@ -118,7 +121,8 @@ export async function runCapsule(
       stdout.write(`${HELP}\n`);
       return 0;
     }
-    if (options.verify) return await verifyFile(options.verify, stdout, options.json);
+    if (options.verify)
+      return await verifyFile(options.verify, stdout, options.json);
 
     const root = findRepositoryRoot(cwd);
     const checkpoint = resolveCheckpoint(await listCheckpoints(root), token);
@@ -136,7 +140,11 @@ export async function runCapsule(
       : join(defaultDirectory, `${checkpoint.id}.capsule.json`);
 
     await mkdir(dirname(outputPath), { recursive: true });
-    await writeFile(outputPath, `${JSON.stringify(capsule, null, 2)}\n`, "utf8");
+    await writeFile(
+      outputPath,
+      `${JSON.stringify(capsule, null, 2)}\n`,
+      "utf8",
+    );
 
     const result = {
       path: outputPath,

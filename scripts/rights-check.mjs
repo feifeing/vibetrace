@@ -16,9 +16,28 @@ async function readJson(path) {
 const packageJson = await readJson(join(root, "package.json"));
 const packageLock = await readJson(join(root, "package-lock.json"));
 
+if (packageJson.name !== "patchoath") {
+  fail(`Unexpected package name: ${packageJson.name || "missing"}; expected patchoath.`);
+}
+if (packageJson.version !== packageLock.version) {
+  fail(
+    `package.json and package-lock.json versions differ (${packageJson.version} vs ${packageLock.version}).`,
+  );
+}
+if (packageLock.name !== "patchoath" || packageLock.packages?.[""]?.name !== "patchoath") {
+  fail("package-lock.json root package metadata must use the PatchOath package name.");
+}
+if (packageJson.bin?.patchoath !== "./bin/patchoath.mjs") {
+  fail("The primary package CLI must be patchoath -> ./bin/patchoath.mjs.");
+}
+if (packageJson.bin?.vibetrace !== "./bin/vibetrace.mjs") {
+  fail(
+    "The temporary legacy vibetrace CLI compatibility shim must remain explicit until its deprecation window is closed.",
+  );
+}
 if (packageJson.private !== true) {
   fail(
-    "package.json must remain private until the documented naming/distribution release blocker is deliberately resolved.",
+    "package.json must remain private until the explicit public-package release decision is made after the PatchOath migration and final rights review.",
   );
 }
 if (packageJson.license !== "MIT") {
@@ -60,6 +79,7 @@ for (const required of [
   "LEGAL.md",
   "THIRD_PARTY_NOTICES.md",
   "docs/asset-provenance.md",
+  "docs/brand-clearance.md",
   "docs/release-readiness.md",
 ]) {
   try {
@@ -97,6 +117,7 @@ for (const name of cssFiles) {
 
 const excludedDirectories = new Set([
   ".git",
+  ".patchoath",
   ".vibetrace",
   "node_modules",
   "playwright-report",
@@ -128,6 +149,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Rights/release gate passed: package remains private, dependency licenses match the reviewed baseline, required notices are packaged, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
+    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
   );
 }

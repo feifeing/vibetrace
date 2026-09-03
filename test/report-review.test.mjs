@@ -103,7 +103,10 @@ function parseReportData(source) {
 test("generated reports derive review evidence from receipt-bound Git objects", async () => {
   const { root, checkpoint } = await checkpointFixture();
   const report = await generateReport(root, [checkpoint], checkpoint.id);
-  const source = await readFile(join(report.directory, "report-data.js"), "utf8");
+  const source = await readFile(
+    join(report.directory, "report-data.js"),
+    "utf8",
+  );
   const payload = parseReportData(source);
   const rendered = payload.checkpoints[0];
 
@@ -121,7 +124,10 @@ test("generated reports derive review evidence from receipt-bound Git objects", 
   assert.equal(rendered.review.contractDelta.delta.budgets.maxFiles.to, 2);
   assert.equal(rendered.review.contractDelta.delta.budgets.maxLines.to, 2);
   assert.equal(rendered.review.contractDelta.delta.budgets.maxModules.to, 2);
-  assert.equal(rendered.review.contractDelta.counterfactual.status, "compliant");
+  assert.equal(
+    rendered.review.contractDelta.counterfactual.status,
+    "compliant",
+  );
 
   assert.equal(rendered.review.disclosure.status, "verified");
   assert.equal(rendered.review.disclosure.mode, "minimum-disclosure");

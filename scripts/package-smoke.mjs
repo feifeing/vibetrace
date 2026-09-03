@@ -148,6 +148,36 @@ try {
   assert.equal(contractDelta.sourceReceiptVerified, true);
   assert.equal(contractDelta.gitEffectRecomputed, true);
 
+  const review = JSON.parse(
+    runCli(cli, project, [
+      "review",
+      "--accept-effect",
+      "--reviewer",
+      "Package smoke reviewer",
+      "--json",
+    ]),
+  );
+  assert.equal(review.created, true);
+  assert.equal(review.authorityBoundary.futureAuthorityGranted, false);
+  assert.equal(review.reviewerIdentityVerified, false);
+  const reviewVerification = JSON.parse(
+    runCli(cli, project, [
+      "review",
+      "--verify",
+      review.record.recordId,
+      "--json",
+    ]),
+  );
+  assert.equal(
+    reviewVerification.valid,
+    true,
+    "packed CLI should verify its historical effect review",
+  );
+  assert.equal(
+    reviewVerification.authorityBoundary.changeContractMutated,
+    false,
+  );
+
   const capsuleResult = JSON.parse(runCli(cli, project, ["capsule", "--json"]));
   const capsuleBytes = await readFile(capsuleResult.path, "utf8");
   assert.equal(

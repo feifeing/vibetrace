@@ -82,7 +82,9 @@ if (remoteAssetTag.test(html)) {
   );
 }
 if (cssFiles.length === 0) {
-  fail("No dashboard stylesheet was found under web/; rights scan is incomplete.");
+  fail(
+    "No dashboard stylesheet was found under web/; rights scan is incomplete.",
+  );
 }
 for (const name of cssFiles) {
   const css = await readFile(join(webDirectory, name), "utf8");

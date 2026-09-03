@@ -1,12 +1,13 @@
 import { computeObservedContractDelta } from "./core/contract-delta.mjs";
 import { listCheckpoints } from "./core/store.mjs";
+import { collectCommitDiff } from "./git/diff.mjs";
 import { findRepositoryRoot } from "./git/git.mjs";
 
 const HELP = `vibetrace contract-delta [checkpoint] [--json]
 
 Compute the restricted local Change-Contract delta that would be sufficient for the selected checkpoint's already-observed effect, without applying or persisting any permission change.
 
-The proposal vocabulary is intentionally narrow: exact observed file grants and budget increases to observed totals. Explicit deny rules and protected surfaces are never relaxed automatically.
+The observed effect is recomputed from the checkpoint's before/after Git objects rather than trusted from cached analysis. The proposal vocabulary is intentionally narrow: exact observed file grants and budget increases to observed totals. Explicit deny rules and protected surfaces are never relaxed automatically.
 
 Options:
   --json      Emit machine-readable output
@@ -88,7 +89,12 @@ export async function runContractDelta(
     }
     const root = findRepositoryRoot(cwd);
     const checkpoint = resolveCheckpoint(await listCheckpoints(root), options.token);
-    const result = computeObservedContractDelta(checkpoint);
+    const observedFiles = collectCommitDiff(
+      root,
+      checkpoint.before.commit,
+      checkpoint.after.commit,
+    );
+    const result = computeObservedContractDelta(checkpoint, observedFiles);
     if (options.json) stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     else printHuman(stdout, result);
     return ["human-review-required", "incomplete-proposal"].includes(result.status)

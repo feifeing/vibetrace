@@ -69,8 +69,11 @@ for (const required of [
   }
 }
 
-const html = await readFile(join(root, "web", "index.html"), "utf8");
-const cssFiles = ["styles.css", "contract.css", "review.css"];
+const webDirectory = join(root, "web");
+const html = await readFile(join(webDirectory, "index.html"), "utf8");
+const cssFiles = (await readdir(webDirectory))
+  .filter((name) => name.endsWith(".css"))
+  .sort();
 const remoteAssetTag =
   /<(?:img|script|link)\b[^>]*(?:src|href)=["']https?:\/\//giu;
 if (remoteAssetTag.test(html)) {
@@ -78,8 +81,11 @@ if (remoteAssetTag.test(html)) {
     "web/index.html loads a remote image/script/stylesheet. Vendor or document third-party rights before allowing remote assets.",
   );
 }
+if (cssFiles.length === 0) {
+  fail("No dashboard stylesheet was found under web/; rights scan is incomplete.");
+}
 for (const name of cssFiles) {
-  const css = await readFile(join(root, "web", name), "utf8");
+  const css = await readFile(join(webDirectory, name), "utf8");
   if (/url\(\s*["']?https?:\/\//iu.test(css)) {
     fail(
       `${name} loads a remote CSS asset; review provenance and redistribution/data-flow implications.`,
@@ -120,6 +126,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    "Rights/release gate passed: package remains private, dependency licenses match the reviewed baseline, required notices are packaged, and no unreviewed remote web assets or bundled fonts were found.",
+    `Rights/release gate passed: package remains private, dependency licenses match the reviewed baseline, required notices are packaged, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
   );
 }

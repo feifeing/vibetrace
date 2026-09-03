@@ -16,7 +16,8 @@ import {
   memoryStream,
 } from "../test-support/helpers.mjs";
 
-const SECRET_PROMPT = "Fix ACME customer login without exposing Project Nightjar";
+const SECRET_PROMPT =
+  "Fix ACME customer login without exposing Project Nightjar";
 const SECRET_PATH = "src/customers/acme/nightjar-auth.js";
 const SECRET_PATTERN = "src/customers/acme/**";
 
@@ -80,7 +81,12 @@ function checkpointFixture(root, sessionId) {
         level: "low",
         model: "vibetrace-evidence-risk-v2",
         factors: [
-          { id: "file-scope", label: "File scope", points: 2, detail: SECRET_PATH },
+          {
+            id: "file-scope",
+            label: "File scope",
+            points: 2,
+            detail: SECRET_PATH,
+          },
         ],
       },
     },
@@ -121,7 +127,10 @@ test("expanded disclosure is explicit and still receipt-verifiable", async () =>
 
   assert.equal(capsule.evidence.prompt.text, SECRET_PROMPT);
   assert.equal(capsule.evidence.files[0].path, SECRET_PATH);
-  assert.equal(capsule.evidence.authorization.contract.allow[0], SECRET_PATTERN);
+  assert.equal(
+    capsule.evidence.authorization.contract.allow[0],
+    SECRET_PATTERN,
+  );
   assert.equal(verifyDisclosureCapsule(capsule).valid, true);
 });
 
@@ -135,7 +144,9 @@ test("disclosure drift and receipt tampering fail independently", async () => {
   const driftVerification = verifyDisclosureCapsule(drifted);
   assert.equal(driftVerification.valid, false);
   assert.equal(driftVerification.reason, "disclosure-drift");
-  assert.deepEqual(driftVerification.audit.violations, ["prompt-text-disclosed"]);
+  assert.deepEqual(driftVerification.audit.violations, [
+    "prompt-text-disclosed",
+  ]);
 
   const tampered = createDisclosureCapsule(checkpoint);
   tampered.evidence.effect.risk.score = 99;

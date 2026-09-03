@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
 
+const CURRENT_EVIDENCE_VERSION = 2;
+const SUPPORTED_EVIDENCE_VERSIONS = new Set([1, 2]);
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (!value || typeof value !== "object") return value;
@@ -16,7 +19,31 @@ function sha256(value) {
     .digest("hex");
 }
 
-function evidenceForCheckpoint(checkpoint) {
+function normalizedFileManifest(files = []) {
+  return files
+    .map((file) => ({
+      path: String(file.path || "").replaceAll("\\", "/"),
+      oldPath: file.oldPath
+        ? String(file.oldPath).replaceAll("\\", "/")
+        : null,
+      status: file.status || null,
+      additions: Number.isFinite(file.additions) ? file.additions : null,
+      deletions: Number.isFinite(file.deletions) ? file.deletions : null,
+      binary: Boolean(file.binary),
+      category: file.category || null,
+      module: file.module || null,
+      directory: file.directory || null,
+      extension: file.extension || null,
+      signals: Array.isArray(file.signals) ? [...file.signals].sort() : [],
+    }))
+    .sort((left, right) => {
+      const pathOrder = left.path.localeCompare(right.path);
+      if (pathOrder !== 0) return pathOrder;
+      return String(left.oldPath || "").localeCompare(String(right.oldPath || ""));
+    });
+}
+
+function evidenceForCheckpointV1(checkpoint) {
   if (!checkpoint?.before?.commit || !checkpoint?.after?.commit) return null;
   return {
     version: 1,
@@ -54,8 +81,66 @@ function evidenceForCheckpoint(checkpoint) {
   };
 }
 
-export function createEvidenceReceipt(checkpoint) {
-  const evidence = evidenceForCheckpoint(checkpoint);
+function evidenceForCheckpointV2(checkpoint) {
+  const legacy = evidenceForCheckpointV1(checkpoint);
+  if (!legacy) return null;
+  const fileManifest = normalizedFileManifest(checkpoint.analysis?.files || []);
+  return {
+    ...legacy,
+    version: 2,
+    effect: {
+      summary: checkpoint.analysis?.summary || null,
+      fileManifest,
+      fileManifestSha256: sha256(fileManifest),
+      intent: checkpoint.analysis?.intent
+        ? stable(checkpoint.analysis.intent)
+        : null,
+      contractCompliance: checkpoint.analysis?.contractCompliance || null,
+      blastRadius: checkpoint.analysis?.blastRadius || null,
+      risk: checkpoint.analysis?.risk || null,
+      visualAnalysis: checkpoint.analysis?.visual
+        ? stable(checkpoint.analysis.visual)
+        : null,
+    },
+  };
+}
+
+function evidenceForCheckpoint(checkpoint, version) {
+  if (version === 1) return evidenceForCheckpointV1(checkpoint);
+  if (version === 2) return evidenceForCheckpointV2(checkpoint);
+  throw new Error(`Unsupported Evidence Receipt version: ${version}.`);
+}
+
+function coverageForVersion(version) {
+  if (version === 1) {
+    return {
+      evidenceVersion: 1,
+      fileManifestBound: false,
+      intentAnalysisBound: false,
+      visualAnalysisBound: false,
+      scope: "legacy-v1",
+    };
+  }
+  if (version === 2) {
+    return {
+      evidenceVersion: 2,
+      fileManifestBound: true,
+      intentAnalysisBound: true,
+      visualAnalysisBound: true,
+      scope: "effect-manifest-v2",
+    };
+  }
+  return null;
+}
+
+export function createEvidenceReceipt(
+  checkpoint,
+  { version = CURRENT_EVIDENCE_VERSION } = {},
+) {
+  if (!SUPPORTED_EVIDENCE_VERSIONS.has(version)) {
+    throw new Error(`Unsupported Evidence Receipt version: ${version}.`);
+  }
+  const evidence = evidenceForCheckpoint(checkpoint, version);
   if (!evidence) return null;
   return {
     algorithm: "sha256",
@@ -66,13 +151,38 @@ export function createEvidenceReceipt(checkpoint) {
 
 export function verifyEvidenceReceipt(checkpoint) {
   const stored = checkpoint?.receipt;
-  const recomputed = createEvidenceReceipt(checkpoint);
-  if (!stored || !recomputed) {
+  if (!stored) {
+    const recomputed = createEvidenceReceipt(checkpoint);
     return {
       valid: false,
       reason: "missing-receipt",
       expectedReceiptId: recomputed?.receiptId || null,
-      actualReceiptId: stored?.receiptId || null,
+      actualReceiptId: null,
+      coverage: recomputed
+        ? coverageForVersion(recomputed.evidence.version)
+        : null,
+    };
+  }
+
+  const version = stored.evidence?.version;
+  if (!SUPPORTED_EVIDENCE_VERSIONS.has(version)) {
+    return {
+      valid: false,
+      reason: "unsupported-evidence-version",
+      expectedReceiptId: null,
+      actualReceiptId: stored.receiptId || null,
+      coverage: null,
+    };
+  }
+
+  const recomputed = createEvidenceReceipt(checkpoint, { version });
+  if (!recomputed) {
+    return {
+      valid: false,
+      reason: "missing-receipt",
+      expectedReceiptId: null,
+      actualReceiptId: stored.receiptId || null,
+      coverage: coverageForVersion(version),
     };
   }
   if (stored.algorithm !== "sha256") {
@@ -81,6 +191,7 @@ export function verifyEvidenceReceipt(checkpoint) {
       reason: "unsupported-algorithm",
       expectedReceiptId: recomputed.receiptId,
       actualReceiptId: stored.receiptId || null,
+      coverage: coverageForVersion(version),
     };
   }
   const idMatches = stored.receiptId === recomputed.receiptId;
@@ -91,5 +202,8 @@ export function verifyEvidenceReceipt(checkpoint) {
     reason: idMatches && evidenceMatches ? "verified" : "evidence-mismatch",
     expectedReceiptId: recomputed.receiptId,
     actualReceiptId: stored.receiptId || null,
+    coverage: coverageForVersion(version),
   };
 }
+
+export const EVIDENCE_RECEIPT_VERSION = CURRENT_EVIDENCE_VERSION;

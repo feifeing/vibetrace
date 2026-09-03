@@ -122,8 +122,7 @@ function evidenceProjection(checkpoint, policy) {
     visual: checkpoint.visual
       ? {
           captured: true,
-          beforeImageSha256:
-            checkpoint.visual.before?.imageSha256 || null,
+          beforeImageSha256: checkpoint.visual.before?.imageSha256 || null,
           afterImageSha256: checkpoint.visual.after?.imageSha256 || null,
           beforeDomHash: checkpoint.visual.before?.dom?.hash || null,
           afterDomHash: checkpoint.visual.after?.dom?.hash || null,
@@ -145,9 +144,14 @@ function omittedFields(policy) {
   return omitted.sort();
 }
 
-export function createDisclosureCapsule(checkpoint, policy = createDisclosurePolicy()) {
+export function createDisclosureCapsule(
+  checkpoint,
+  policy = createDisclosurePolicy(),
+) {
   if (checkpoint?.status !== "completed" || !checkpoint?.receipt?.receiptId) {
-    throw new Error("A completed checkpoint with an Evidence Receipt is required.");
+    throw new Error(
+      "A completed checkpoint with an Evidence Receipt is required.",
+    );
   }
 
   const body = {

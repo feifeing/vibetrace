@@ -126,6 +126,8 @@ export function computeObservedContractDelta(checkpoint, observedFiles) {
       kind: "vibetrace-observed-contract-delta",
       checkpointId: checkpoint.id,
       sourceEvidenceReceiptId: checkpoint.receipt.receiptId,
+      sourceReceiptVerified: true,
+      gitEffectRecomputed: true,
       status: "not-applicable",
       reason: "no-explicit-change-contract",
       note:
@@ -192,7 +194,8 @@ export function computeObservedContractDelta(checkpoint, observedFiles) {
     kind: "vibetrace-observed-contract-delta",
     checkpointId: checkpoint.id,
     sourceEvidenceReceiptId: checkpoint.receipt.receiptId,
-    sourceEvidenceVerified: true,
+    sourceReceiptVerified: true,
+    gitEffectRecomputed: true,
     observedEffectSource: "recomputed-before-after-git-diff",
     status,
     originalCompliance: compliance,

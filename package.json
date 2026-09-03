@@ -12,18 +12,21 @@
     "src/",
     "web/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "LEGAL.md",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
     "vibetrace": "node bin/vibetrace.mjs",
     "check": "node scripts/check.mjs",
+    "rights:check": "node scripts/rights-check.mjs",
     "test": "node --test",
     "test:e2e": "playwright test",
     "test:package": "node scripts/package-smoke.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify": "npm run format:check && npm run check && npm test && npm run test:e2e"
+    "verify": "npm run format:check && npm run check && npm run rights:check && npm test && npm run test:e2e"
   },
   "keywords": [
     "ai-coding",

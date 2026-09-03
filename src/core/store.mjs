@@ -160,7 +160,11 @@ export async function saveCheckpoint(root, checkpoint) {
     checkpoint.after?.commit &&
     checkpoint.analysis
   ) {
-    checkpoint.receipt = createEvidenceReceipt(checkpoint);
+    const storedVersion = checkpoint.receipt?.evidence?.version;
+    checkpoint.receipt = createEvidenceReceipt(
+      checkpoint,
+      storedVersion ? { version: storedVersion } : undefined,
+    );
   }
   assertValidCheckpoint(checkpoint);
   const paths = storePaths(root);

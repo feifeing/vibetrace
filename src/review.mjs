@@ -111,7 +111,8 @@ function resolveCheckpoint(checkpoints, token) {
   const matches = completed.filter(
     (checkpoint) => checkpoint.id === token || checkpoint.id.startsWith(token),
   );
-  if (matches.length === 0) throw new Error(`Checkpoint ${token} was not found.`);
+  if (matches.length === 0)
+    throw new Error(`Checkpoint ${token} was not found.`);
   if (matches.length > 1) {
     throw new Error(`Checkpoint prefix ${token} is ambiguous.`);
   }
@@ -122,7 +123,8 @@ function resolveReview(records, token) {
   const matches = records.filter(
     (record) => record.recordId === token || record.recordId.startsWith(token),
   );
-  if (matches.length === 0) throw new Error(`Review record ${token} was not found.`);
+  if (matches.length === 0)
+    throw new Error(`Review record ${token} was not found.`);
   if (matches.length > 1) {
     throw new Error(`Review record prefix ${token} is ambiguous.`);
   }
@@ -166,7 +168,9 @@ async function verifySourceEvidence(root, checkpoint) {
 }
 
 function selectedDisposition(options) {
-  const selected = [...DECISION_FLAGS.entries()].filter(([flag]) => options[flag]);
+  const selected = [...DECISION_FLAGS.entries()].filter(
+    ([flag]) => options[flag],
+  );
   if (selected.length === 0) return null;
   if (selected.length > 1) {
     throw new Error("Choose exactly one review decision.");
@@ -196,12 +200,16 @@ export async function runReview(argv = process.argv.slice(3), io = {}) {
 
     if (parsed.options["--list"]) {
       if (parsed.options["--verify"] || selectedDisposition(parsed.options)) {
-        throw new Error("--list cannot be combined with a review decision or --verify.");
+        throw new Error(
+          "--list cannot be combined with a review decision or --verify.",
+        );
       }
       let records = await listReviewRecords(root);
       if (parsed.checkpoint) {
         const checkpoint = resolveCheckpoint(checkpoints, parsed.checkpoint);
-        records = records.filter((record) => record.checkpointId === checkpoint.id);
+        records = records.filter(
+          (record) => record.checkpointId === checkpoint.id,
+        );
       }
       if (parsed.options["--json"]) {
         stdout.write(`${JSON.stringify(records, null, 2)}\n`);
@@ -219,7 +227,9 @@ export async function runReview(argv = process.argv.slice(3), io = {}) {
 
     if (parsed.options["--verify"]) {
       if (parsed.checkpoint || selectedDisposition(parsed.options)) {
-        throw new Error("--verify accepts a review record ID and no review decision.");
+        throw new Error(
+          "--verify accepts a review record ID and no review decision.",
+        );
       }
       const record = resolveReview(
         await listReviewRecords(root),
@@ -283,7 +293,9 @@ export async function runReview(argv = process.argv.slice(3), io = {}) {
         );
       } else {
         stdout.write(`refused  ${checkpoint.id}\n`);
-        stdout.write(`reason   source evidence did not verify (${sourceEvidence.reason})\n`);
+        stdout.write(
+          `reason   source evidence did not verify (${sourceEvidence.reason})\n`,
+        );
       }
       return 2;
     }
@@ -323,7 +335,9 @@ export async function runReview(argv = process.argv.slice(3), io = {}) {
       stdout.write(`effect    ${record.disposition}\n`);
       stdout.write(`source    ${record.sourceReceiptId}\n`);
       if (record.reviewerLabel) {
-        stdout.write(`reviewer  ${record.reviewerLabel} (claimed label; identity not verified)\n`);
+        stdout.write(
+          `reviewer  ${record.reviewerLabel} (claimed label; identity not verified)\n`,
+        );
       }
       stdout.write(
         "authority historical effect only · Change Contract unchanged · no future authority granted\n",

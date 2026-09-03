@@ -2,12 +2,12 @@
 
 This document records the current first-party visual assets in the repository and the rules for adding new media.
 
-| Asset | Provenance | Notes |
-| --- | --- | --- |
-| `docs/vibetrace-mark.svg` | Project-authored vector source stored directly in this repository | Simple geometric mark; no third-party logo or font file is embedded. |
+| Asset                          | Provenance                                                           | Notes                                                                                                             |
+| ------------------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `docs/vibetrace-mark.svg`      | Project-authored vector source stored directly in this repository    | Simple geometric mark; no third-party logo or font file is embedded.                                              |
 | `docs/vibetrace-dashboard.png` | Generated from the project's own browser demo by `e2e/demo.spec.mjs` | The screenshot is CI/browser evidence of VibeTrace's own interface, not a screenshot copied from another product. |
-| Inline SVG in `web/index.html` | Project-authored interface glyphs | No external icon package is bundled for these glyphs. |
-| Web typography | System font fallback stack in `web/styles.css` | No `.ttf`, `.otf`, `.woff`, or `.woff2` font file is currently redistributed by the repository. |
+| Inline SVG in `web/index.html` | Project-authored interface glyphs                                    | No external icon package is bundled for these glyphs.                                                             |
+| Web typography                 | System font fallback stack in `web/styles.css`                       | No `.ttf`, `.otf`, `.woff`, or `.woff2` font file is currently redistributed by the repository.                   |
 
 This provenance record is an engineering record, not a trademark clearance opinion. A first-party asset can still require a separate name/logo clearance review before commercial branding.
 

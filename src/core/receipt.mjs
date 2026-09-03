@@ -23,9 +23,7 @@ function normalizedFileManifest(files = []) {
   return files
     .map((file) => ({
       path: String(file.path || "").replaceAll("\\", "/"),
-      oldPath: file.oldPath
-        ? String(file.oldPath).replaceAll("\\", "/")
-        : null,
+      oldPath: file.oldPath ? String(file.oldPath).replaceAll("\\", "/") : null,
       status: file.status || null,
       additions: Number.isFinite(file.additions) ? file.additions : null,
       deletions: Number.isFinite(file.deletions) ? file.deletions : null,
@@ -39,7 +37,9 @@ function normalizedFileManifest(files = []) {
     .sort((left, right) => {
       const pathOrder = left.path.localeCompare(right.path);
       if (pathOrder !== 0) return pathOrder;
-      return String(left.oldPath || "").localeCompare(String(right.oldPath || ""));
+      return String(left.oldPath || "").localeCompare(
+        String(right.oldPath || ""),
+      );
     });
 }
 

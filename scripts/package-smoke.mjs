@@ -6,7 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCli = process.env.npm_execpath;
 const git = process.platform === "win32" ? "git.exe" : "git";
 
 function run(command, args, options = {}) {
@@ -17,11 +17,24 @@ function run(command, args, options = {}) {
   }).trim();
 }
 
+function runNpm(args, options = {}) {
+  if (!npmCli) {
+    throw new Error(
+      "Package smoke requires npm_execpath from an npm-run context.",
+    );
+  }
+  return run(process.execPath, [npmCli, ...args], options);
+}
+
 function runCli(cli, cwd, args) {
   return run(process.execPath, [cli, ...args], {
     cwd,
     env: { ...process.env, NO_COLOR: "1" },
   });
+}
+
+function normalizeTextForGitComparison(value) {
+  return value.replaceAll("\r\n", "\n");
 }
 
 const temporaryRoot = await mkdtemp(join(tmpdir(), "vibetrace-package-smoke-"));
@@ -30,7 +43,7 @@ try {
   const packDirectory = join(temporaryRoot, "pack");
   await mkdir(packDirectory, { recursive: true });
   const packOutput = JSON.parse(
-    run(npm, ["pack", "--json", "--pack-destination", packDirectory], {
+    runNpm(["pack", "--json", "--pack-destination", packDirectory], {
       cwd: root,
     }),
   );
@@ -77,8 +90,7 @@ try {
     ),
     "utf8",
   );
-  run(
-    npm,
+  runNpm(
     [
       "install",
       "--ignore-scripts",
@@ -131,9 +143,11 @@ try {
   assert.equal(JSON.parse(preview).canApply, true);
   runCli(cli, project, ["restore", "--apply"]);
   assert.equal(
-    await readFile(join(project, "app.js"), "utf8"),
+    normalizeTextForGitComparison(
+      await readFile(join(project, "app.js"), "utf8"),
+    ),
     "export const value = 1;\n",
-    "packed CLI should restore the checkpoint without dev dependencies",
+    "packed CLI should restore the Git-equivalent checkpoint state without dev dependencies",
   );
 
   console.log(

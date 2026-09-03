@@ -29,8 +29,6 @@ function normalizedFiles(files = []) {
       additions: file.additions || 0,
       deletions: file.deletions || 0,
       binary: Boolean(file.binary),
-      module: file.module || null,
-      signals: Array.isArray(file.signals) ? [...file.signals].sort() : [],
     }))
     .sort((left, right) => left.path.localeCompare(right.path));
 }
@@ -107,9 +105,14 @@ function proposedContract(contract, exactAllows, budgets) {
   });
 }
 
-export function computeObservedContractDelta(checkpoint) {
-  if (checkpoint?.status !== "completed" || !checkpoint?.analysis?.files) {
-    throw new Error("A completed checkpoint with observed file evidence is required.");
+export function computeObservedContractDelta(checkpoint, observedFiles) {
+  if (checkpoint?.status !== "completed") {
+    throw new Error("A completed checkpoint is required.");
+  }
+  if (!Array.isArray(observedFiles)) {
+    throw new Error(
+      "Recomputed before/after Git diff evidence is required for contract-delta analysis.",
+    );
   }
   const sourceVerification = verifyEvidenceReceipt(checkpoint);
   if (!sourceVerification.valid) {
@@ -130,7 +133,7 @@ export function computeObservedContractDelta(checkpoint) {
     };
   }
 
-  const files = normalizedFiles(checkpoint.analysis.files);
+  const files = normalizedFiles(observedFiles);
   const original = structuredClone(checkpoint.authorization);
   const compliance = evaluateChangeContract(original, files);
   const observed = compliance.totals;
@@ -190,6 +193,7 @@ export function computeObservedContractDelta(checkpoint) {
     checkpointId: checkpoint.id,
     sourceEvidenceReceiptId: checkpoint.receipt.receiptId,
     sourceEvidenceVerified: true,
+    observedEffectSource: "recomputed-before-after-git-diff",
     status,
     originalCompliance: compliance,
     observed,

@@ -4,12 +4,12 @@ VibeTrace is distributed under the MIT License in [`LICENSE`](LICENSE). This fil
 
 The current npm package does **not** bundle `node_modules` or browser binaries. The packages below are development or optional local tooling resolved through npm. Their upstream licenses remain their own.
 
-| Component | Current role | License | Upstream |
-| --- | --- | --- | --- |
-| `@playwright/test` / `playwright` / `playwright-core` | Browser E2E tests and optional visual capture | Apache-2.0 | https://github.com/microsoft/playwright |
-| `pngjs` | Optional PNG decoding and pixel-difference generation | MIT | https://github.com/pngjs/pngjs |
-| `prettier` | Development formatting | MIT | https://github.com/prettier/prettier |
-| `fsevents` | Optional transitive dependency used by development tooling on macOS | MIT | https://github.com/fsevents/fsevents |
+| Component                                             | Current role                                                        | License    | Upstream                                |
+| ----------------------------------------------------- | ------------------------------------------------------------------- | ---------- | --------------------------------------- |
+| `@playwright/test` / `playwright` / `playwright-core` | Browser E2E tests and optional visual capture                       | Apache-2.0 | https://github.com/microsoft/playwright |
+| `pngjs`                                               | Optional PNG decoding and pixel-difference generation               | MIT        | https://github.com/pngjs/pngjs          |
+| `prettier`                                            | Development formatting                                              | MIT        | https://github.com/prettier/prettier    |
+| `fsevents`                                            | Optional transitive dependency used by development tooling on macOS | MIT        | https://github.com/fsevents/fsevents    |
 
 ## Browser binaries
 

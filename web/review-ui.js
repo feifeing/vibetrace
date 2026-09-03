@@ -6,12 +6,21 @@ if (!checkpointId || !reviewPlane) {
   throw new Error("VibeTrace review UI could not find its host elements.");
 }
 
+const demoV2Coverage = {
+  evidenceVersion: 2,
+  fileManifestBound: true,
+  intentAnalysisBound: true,
+  visualAnalysisBound: true,
+  scope: "effect-manifest-v2",
+};
+
 const demoReview = {
   "204718_a91f3c": {
     sourceReceipt: {
       valid: true,
       reason: "verified",
       receiptId: "vtr_4f71a9c83e16d52a3f308cf0",
+      coverage: demoV2Coverage,
     },
     gitEffect: {
       recomputed: true,
@@ -72,6 +81,7 @@ const demoReview = {
       valid: true,
       reason: "verified",
       receiptId: "vtr_16bbac216de20b8c011197d2",
+      coverage: demoV2Coverage,
     },
     gitEffect: {
       recomputed: true,
@@ -116,6 +126,7 @@ const demoReview = {
       valid: true,
       reason: "verified",
       receiptId: "vtr_013e7f2c766593b63dc1d3ae",
+      coverage: demoV2Coverage,
     },
     gitEffect: {
       recomputed: true,
@@ -258,6 +269,7 @@ function renderDelta(delta) {
 
 function renderTrust(review) {
   const source = review?.sourceReceipt;
+  const coverage = source?.coverage;
   const git = review?.gitEffect;
   const delta = review?.contractDelta;
   const replay = delta?.counterfactual?.status || "not-run";
@@ -268,6 +280,15 @@ function renderTrust(review) {
       label: "Source receipt",
       value: source?.valid ? "verified" : source?.reason || "unavailable",
       state: source?.valid ? "ok" : "bad",
+    },
+    {
+      label: "Receipt coverage",
+      value: coverage?.scope || "unknown",
+      state: coverage?.fileManifestBound
+        ? "ok"
+        : coverage?.evidenceVersion === 1
+          ? "warn"
+          : "neutral",
     },
     {
       label: "Git effect",

@@ -36,6 +36,7 @@ function buildReviewEvidence(root, checkpoint) {
       valid: sourceVerification.valid,
       reason: sourceVerification.reason,
       receiptId: checkpoint.receipt?.receiptId || null,
+      coverage: sourceVerification.coverage || null,
     },
     gitEffect: {
       recomputed: false,

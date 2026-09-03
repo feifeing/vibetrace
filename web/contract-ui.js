@@ -14,8 +14,10 @@ const demoAuthorization = {
     authorization: {
       allow: ["src/ui/**", "src/styles/**"],
       deny: ["src/auth/**", "src/router/**"],
+      protectedSurfaces: ["auth", "routing"],
       maxFiles: 3,
       maxLines: 80,
+      maxModules: 2,
     },
     analysis: {
       contractCompliance: {
@@ -24,7 +26,7 @@ const demoAuthorization = {
         violations: [
           {
             detail:
-              "Protected auth/router paths changed and the 3-file budget was exceeded.",
+              "Denied auth/router paths changed, protected surfaces were touched, and the declared budgets were exceeded.",
           },
         ],
       },
@@ -35,8 +37,10 @@ const demoAuthorization = {
     authorization: {
       allow: ["src/marketing/**", "src/styles/**"],
       deny: ["src/auth/**"],
+      protectedSurfaces: ["auth", "dependencies"],
       maxFiles: 5,
       maxLines: 180,
+      maxModules: 3,
     },
     analysis: {
       contractCompliance: {
@@ -110,8 +114,8 @@ function renderAuthorization() {
         <div><p class="section-label">WHAT YOU AUTHORIZED</p><h2 id="authorization-title">Change contract</h2></div>
         <span class="contract-status undeclared">OPTIONAL</span>
       </div>
-      <p class="contract-copy">No explicit boundary was declared for this checkpoint. Intent mismatch remains heuristic evidence only.</p>
-      <div class="contract-hint"><span>+</span><code>--allow "src/ui/**" --deny "src/auth/**" --max-files 3</code></div>
+      <p class="contract-copy">No explicit execution boundary was declared for this checkpoint. Intent mismatch remains heuristic evidence only.</p>
+      <div class="contract-hint"><span>+</span><code>--allow "src/ui/**" --deny "src/auth/**" --protect-surface auth --max-files 3</code></div>
       ${receipt?.receiptId ? `<button class="receipt-chip" type="button"><span>EVIDENCE RECEIPT</span><code>${escapeHtml(receipt.receiptId)}</code></button>` : ""}`;
     bindReceipt(receipt);
     return;
@@ -119,8 +123,15 @@ function renderAuthorization() {
 
   const violated = compliance.status === "violated";
   const limits = [
-    contract.maxFiles === null ? null : `${contract.maxFiles} files max`,
-    contract.maxLines === null ? null : `${contract.maxLines} lines max`,
+    contract.maxFiles === null || contract.maxFiles === undefined
+      ? null
+      : `${contract.maxFiles} files`,
+    contract.maxLines === null || contract.maxLines === undefined
+      ? null
+      : `${contract.maxLines} lines`,
+    contract.maxModules === null || contract.maxModules === undefined
+      ? null
+      : `${contract.maxModules} modules`,
   ].filter(Boolean);
   const violation = compliance.violations?.[0]?.detail;
 
@@ -130,13 +141,14 @@ function renderAuthorization() {
       <span class="contract-status ${violated ? "violated" : "compliant"}">${violated ? "DRIFT" : "ALIGNED"}</span>
     </div>
     <div class="contract-grid">
-      <div><span>ALLOW</span>${patterns(contract.allow, "any path")}</div>
-      <div><span>PROTECT</span>${patterns(contract.deny, "none")}</div>
+      <div><span>ALLOW PATHS</span>${patterns(contract.allow, "any path")}</div>
+      <div><span>DENY PATHS</span>${patterns(contract.deny, "none")}</div>
+      <div><span>PROTECTED SURFACES</span>${patterns(contract.protectedSurfaces, "none")}</div>
       <div><span>BUDGET</span><strong>${escapeHtml(limits.join(" · ") || "unbounded")}</strong></div>
     </div>
     <div class="contract-verdict ${violated ? "violated" : "compliant"}">
       <span>${violated ? "AUTHORIZATION DRIFT" : "AUTHORIZED SCOPE HELD"}</span>
-      <strong>${escapeHtml(violation || "Observed files stayed inside the explicit change contract.")}</strong>
+      <strong>${escapeHtml(violation || "Observed files stayed inside the explicit Change Contract.")}</strong>
     </div>
     ${receipt?.receiptId ? `<button class="receipt-chip" type="button"><span>EVIDENCE RECEIPT</span><code>${escapeHtml(receipt.receiptId)}</code></button>` : ""}`;
 

@@ -7,6 +7,8 @@ import {
   verifyDisclosureCapsule,
 } from "../core/disclosure.mjs";
 import { verifyEvidenceReceipt } from "../core/receipt.mjs";
+import { verifyHistoricalEffectReview } from "../core/review-record.mjs";
+import { listHistoricalEffectReviews } from "../core/review-store.mjs";
 import { storePaths } from "../core/store.mjs";
 import { collectCommitDiff } from "../git/diff.mjs";
 
@@ -29,7 +31,54 @@ function unavailable(reason, detail = null) {
   return { status: "unavailable", reason, detail };
 }
 
-function buildReviewEvidence(root, checkpoint) {
+function buildHistoricalReview(checkpoint, records, sourceVerification) {
+  const relevant = records
+    .filter((record) => record.checkpointId === checkpoint.id)
+    .map((record) => ({
+      record,
+      integrity: verifyHistoricalEffectReview(record, checkpoint),
+    }));
+  const latest = relevant[0] || null;
+
+  if (!latest) {
+    return {
+      status: "not-recorded",
+      count: 0,
+      latest: null,
+      sourceReceiptCurrent: {
+        valid: sourceVerification.valid,
+        reason: sourceVerification.reason,
+      },
+      reportVerificationScope: "no-review-record",
+      authorityBoundary: {
+        historicalEffectOnly: true,
+        changeContractMutated: false,
+        futureAuthorityGranted: false,
+      },
+    };
+  }
+
+  const linked = latest.integrity.valid && sourceVerification.valid;
+  return {
+    status: linked ? "record-linked" : "invalid",
+    count: relevant.length,
+    latest,
+    records: relevant,
+    sourceReceiptCurrent: {
+      valid: sourceVerification.valid,
+      reason: sourceVerification.reason,
+    },
+    reportVerificationScope: "record-integrity-plus-source-receipt",
+    fullVerifyCommand: `vibetrace review --verify ${latest.record.recordId}`,
+    authorityBoundary: {
+      historicalEffectOnly: true,
+      changeContractMutated: false,
+      futureAuthorityGranted: false,
+    },
+  };
+}
+
+function buildReviewEvidence(root, checkpoint, historicalRecords) {
   const sourceVerification = verifyEvidenceReceipt(checkpoint);
   const review = {
     sourceReceipt: {
@@ -43,6 +92,11 @@ function buildReviewEvidence(root, checkpoint) {
       source: null,
     },
     contractDelta: null,
+    historicalEffectReview: buildHistoricalReview(
+      checkpoint,
+      historicalRecords,
+      sourceVerification,
+    ),
     disclosure: null,
   };
 
@@ -105,7 +159,7 @@ function buildReviewEvidence(root, checkpoint) {
   return review;
 }
 
-function portableCheckpoint(root, checkpoint, assetMap) {
+function portableCheckpoint(root, checkpoint, assetMap, historicalRecords) {
   const copy = structuredClone(checkpoint);
   if (copy.visual?.before?.image)
     copy.visual.before.image = assetMap.get(copy.visual.before.image) || null;
@@ -117,7 +171,7 @@ function portableCheckpoint(root, checkpoint, assetMap) {
   }
   if (copy.before) delete copy.before.ref;
   if (copy.after) delete copy.after.ref;
-  copy.review = buildReviewEvidence(root, checkpoint);
+  copy.review = buildReviewEvidence(root, checkpoint, historicalRecords);
   return copy;
 }
 
@@ -136,9 +190,11 @@ export async function generateReport(root, checkpoints, selectedId) {
     "styles.css",
     "contract.css",
     "review.css",
+    "historical-review.css",
     "app.js",
     "contract-ui.js",
     "review-ui.js",
+    "historical-review-ui.js",
   ]) {
     await copyFile(join(sourceWebDirectory, name), join(reportDirectory, name));
   }
@@ -159,12 +215,13 @@ export async function generateReport(root, checkpoints, selectedId) {
     }
   }
 
+  const historicalRecords = await listHistoricalEffectReviews(root);
   const payload = {
     mode: "report",
     selectedId: selected.id,
     generatedAt: new Date().toISOString(),
     checkpoints: checkpoints.map((checkpoint) =>
-      portableCheckpoint(root, checkpoint, assetMap),
+      portableCheckpoint(root, checkpoint, assetMap, historicalRecords),
     ),
   };
   await writeFile(

@@ -50,6 +50,21 @@ test("the evidence workspace replays authority, review, and disclosure evidence"
   await expect(page.locator(".disclosure-card")).toContainText(
     "DISCLOSURE RECEIPT",
   );
+  await expect(page.locator(".historical-review-card")).toContainText(
+    "Historical effect review",
+  );
+  await expect(page.locator(".historical-review-card")).toContainText(
+    "FOLLOW-UP",
+  );
+  await expect(page.locator(".historical-review-card")).toContainText(
+    "Future authority unchanged",
+  );
+  await expect(page.locator(".historical-review-card")).toContainText(
+    "identity not verified",
+  );
+  await expect(
+    page.locator(".historical-review-card button:not([data-history-copy])"),
+  ).toHaveCount(0);
 
   await page.locator(".timeline-item").nth(1).click();
   await expect(page.locator("#evidence-title")).toContainText("cinematic");
@@ -63,6 +78,15 @@ test("the evidence workspace replays authority, review, and disclosure evidence"
     "No path grant needed",
   );
   await expect(page.locator(".trust-card")).toContainText("compliant");
+  await expect(page.locator(".historical-review-card")).toContainText(
+    "ACCEPTED EFFECT",
+  );
+  await expect(page.locator(".historical-review-card")).toContainText(
+    "Accepted for this captured effect only.",
+  );
+  await expect(page.locator(".historical-review-card")).toContainText(
+    "Future authority unchanged",
+  );
 
   await page.locator('[data-view="diff"]').click();
   await expect(page.locator("#visualStage")).toHaveAttribute(
@@ -84,6 +108,7 @@ test("the mobile layout does not create page-level horizontal overflow", async (
   await page.goto("/");
   await expect(page.locator("#visualStage")).toBeVisible();
   await expect(page.locator("#reviewPlane")).toBeVisible();
+  await expect(page.locator(".historical-review-card")).toBeVisible();
   const overflow = await page.evaluate(
     () =>
       document.documentElement.scrollWidth -
@@ -102,6 +127,7 @@ test("capture the README dashboard at a real desktop viewport", async ({
 }) => {
   await page.setViewportSize({ width: 1600, height: 1100 });
   await page.goto("/");
+  await expect(page.locator(".historical-review-card")).toBeVisible();
   await mkdir("test-results", { recursive: true });
   await page.screenshot({
     path: "test-results/vibetrace-dashboard.png",

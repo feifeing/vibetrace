@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { createEvidenceReceipt } from "../src/core/receipt.mjs";
+import { createHistoricalEffectReview } from "../src/core/review-record.mjs";
+import { saveHistoricalEffectReview } from "../src/core/review-store.mjs";
 import { generateReport } from "../src/report/generate.mjs";
 import { createRepository, git } from "../test-support/helpers.mjs";
 
@@ -94,14 +96,27 @@ async function checkpointFixture() {
   return { root, checkpoint };
 }
 
+async function addHistoricalReview(root, checkpoint) {
+  const record = createHistoricalEffectReview({
+    checkpoint,
+    disposition: "accept-effect",
+    recordedAt: "2026-09-03T09:02:00.000Z",
+    note: "Accepted for this captured effect only.",
+    reviewerLabel: "Review Fixture",
+  });
+  await saveHistoricalEffectReview(root, record);
+  return record;
+}
+
 function parseReportData(source) {
   const prefix = "window.__VIBETRACE_REPORT__ = ";
   assert.ok(source.startsWith(prefix));
   return JSON.parse(source.slice(prefix.length).replace(/;\s*$/u, ""));
 }
 
-test("generated reports derive review evidence from receipt-bound Git objects", async () => {
+test("generated reports derive review evidence and historical human outcomes", async () => {
   const { root, checkpoint } = await checkpointFixture();
+  const historicalRecord = await addHistoricalReview(root, checkpoint);
   const report = await generateReport(root, [checkpoint], checkpoint.id);
   const source = await readFile(
     join(report.directory, "report-data.js"),
@@ -135,6 +150,21 @@ test("generated reports derive review evidence from receipt-bound Git objects", 
     "compliant",
   );
 
+  const historical = rendered.review.historicalEffectReview;
+  assert.equal(historical.status, "record-linked");
+  assert.equal(historical.count, 1);
+  assert.equal(historical.latest.record.recordId, historicalRecord.recordId);
+  assert.equal(historical.latest.record.disposition, "accept-effect");
+  assert.equal(historical.latest.integrity.valid, true);
+  assert.equal(historical.sourceReceiptCurrent.valid, true);
+  assert.equal(historical.authorityBoundary.historicalEffectOnly, true);
+  assert.equal(historical.authorityBoundary.changeContractMutated, false);
+  assert.equal(historical.authorityBoundary.futureAuthorityGranted, false);
+  assert.equal(
+    historical.fullVerifyCommand,
+    `vibetrace review --verify ${historicalRecord.recordId}`,
+  );
+
   assert.equal(rendered.review.disclosure.status, "verified");
   assert.equal(rendered.review.disclosure.mode, "minimum-disclosure");
   assert.ok(rendered.review.disclosure.omitted.includes("promptText"));
@@ -142,15 +172,21 @@ test("generated reports derive review evidence from receipt-bound Git objects", 
   assert.match(rendered.review.disclosure.receiptId, /^vtd_[a-f0-9]{24}$/u);
 
   assert.match(source, /Project Nightjar/u);
+  assert.match(source, /Review Fixture/u);
   const html = await readFile(report.index, "utf8");
   assert.match(html, /review\.css/u);
   assert.match(html, /review-ui\.js/u);
+  assert.match(html, /historical-review\.css/u);
+  assert.match(html, /historical-review-ui\.js/u);
   await readFile(join(report.directory, "review.css"), "utf8");
   await readFile(join(report.directory, "review-ui.js"), "utf8");
+  await readFile(join(report.directory, "historical-review.css"), "utf8");
+  await readFile(join(report.directory, "historical-review-ui.js"), "utf8");
 });
 
-test("report review plane refuses derived proposals when the source receipt is invalid", async () => {
+test("report review plane invalidates a historical review when its source receipt is invalid", async () => {
   const { root, checkpoint } = await checkpointFixture();
+  await addHistoricalReview(root, checkpoint);
   checkpoint.prompt.text = "tampered prompt";
 
   const report = await generateReport(root, [checkpoint], checkpoint.id);
@@ -165,4 +201,6 @@ test("report review plane refuses derived proposals when the source receipt is i
   assert.equal(review.disclosure.status, "unavailable");
   assert.equal(review.disclosure.reason, "source-receipt-unverified");
   assert.equal(review.gitEffect.recomputed, false);
+  assert.equal(review.historicalEffectReview.status, "invalid");
+  assert.equal(review.historicalEffectReview.sourceReceiptCurrent.valid, false);
 });

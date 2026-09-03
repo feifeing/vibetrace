@@ -190,9 +190,11 @@ export async function generateReport(root, checkpoints, selectedId) {
     "styles.css",
     "contract.css",
     "review.css",
+    "historical-review.css",
     "app.js",
     "contract-ui.js",
     "review-ui.js",
+    "historical-review-ui.js",
   ]) {
     await copyFile(join(sourceWebDirectory, name), join(reportDirectory, name));
   }

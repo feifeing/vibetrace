@@ -22,7 +22,9 @@ if (packageJson.private !== true) {
   );
 }
 if (packageJson.license !== "MIT") {
-  fail(`Unexpected repository package license: ${packageJson.license || "missing"}.`);
+  fail(
+    `Unexpected repository package license: ${packageJson.license || "missing"}.`,
+  );
 }
 
 const requiredPackageFiles = ["LICENSE", "LEGAL.md", "THIRD_PARTY_NOTICES.md"];
@@ -68,12 +70,9 @@ for (const required of [
 }
 
 const html = await readFile(join(root, "web", "index.html"), "utf8");
-const cssFiles = [
-  "styles.css",
-  "contract.css",
-  "review.css",
-];
-const remoteAssetTag = /<(?:img|script|link)\b[^>]*(?:src|href)=["']https?:\/\//giu;
+const cssFiles = ["styles.css", "contract.css", "review.css"];
+const remoteAssetTag =
+  /<(?:img|script|link)\b[^>]*(?:src|href)=["']https?:\/\//giu;
 if (remoteAssetTag.test(html)) {
   fail(
     "web/index.html loads a remote image/script/stylesheet. Vendor or document third-party rights before allowing remote assets.",
@@ -82,7 +81,9 @@ if (remoteAssetTag.test(html)) {
 for (const name of cssFiles) {
   const css = await readFile(join(root, "web", name), "utf8");
   if (/url\(\s*["']?https?:\/\//iu.test(css)) {
-    fail(`${name} loads a remote CSS asset; review provenance and redistribution/data-flow implications.`);
+    fail(
+      `${name} loads a remote CSS asset; review provenance and redistribution/data-flow implications.`,
+    );
   }
 }
 

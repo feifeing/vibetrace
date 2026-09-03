@@ -22,9 +22,7 @@ function normalizedFiles(files = []) {
   return files
     .map((file) => ({
       path: String(file.path || "").replaceAll("\\", "/"),
-      oldPath: file.oldPath
-        ? String(file.oldPath).replaceAll("\\", "/")
-        : null,
+      oldPath: file.oldPath ? String(file.oldPath).replaceAll("\\", "/") : null,
       status: file.status || null,
       additions: file.additions || 0,
       deletions: file.deletions || 0,
@@ -42,7 +40,8 @@ function unsafeExactPath(path) {
 }
 
 function limitDelta(name, current, observed) {
-  if (current === null || current === undefined || observed <= current) return null;
+  if (current === null || current === undefined || observed <= current)
+    return null;
   return {
     field: name,
     from: current,
@@ -130,8 +129,7 @@ export function computeObservedContractDelta(checkpoint, observedFiles) {
       gitEffectRecomputed: true,
       status: "not-applicable",
       reason: "no-explicit-change-contract",
-      note:
-        "Without an explicit starting contract there is no authorization boundary to repair.",
+      note: "Without an explicit starting contract there is no authorization boundary to repair.",
     };
   }
 
@@ -213,7 +211,11 @@ export function computeObservedContractDelta(checkpoint, observedFiles) {
       model: "restricted-local-delta-v1",
       claim:
         "Minimal only within VibeTrace's restricted proposal vocabulary: exact observed file grants plus budget increases to observed totals. It is not a globally minimal access-control policy.",
-      neverProposed: ["remove-deny", "unprotect-sensitive-surface", "broad-glob"],
+      neverProposed: [
+        "remove-deny",
+        "unprotect-sensitive-surface",
+        "broad-glob",
+      ],
       hasMechanicalDelta: hasDelta,
     },
     proposalReceipt: {

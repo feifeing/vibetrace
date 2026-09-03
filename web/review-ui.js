@@ -163,12 +163,17 @@ function currentCheckpoint() {
       (checkpoint) => checkpoint.id.replace(/^vt_/u, "") === displayed,
     );
   }
-  return { id: `vt_${displayed}`, review: demoReview[displayed] || demoReview["204718_a91f3c"] };
+  return {
+    id: `vt_${displayed}`,
+    review: demoReview[displayed] || demoReview["204718_a91f3c"],
+  };
 }
 
 function reviewState(delta, sourceReceipt) {
-  if (!sourceReceipt?.valid) return { label: "UNVERIFIED", className: "blocked" };
-  if (!delta) return { label: "UNAVAILABLE", className: "muted" };
+  if (!sourceReceipt?.valid)
+    return { label: "UNVERIFIED", className: "blocked" };
+  if (!delta || delta.status === "unavailable")
+    return { label: "UNAVAILABLE", className: "muted" };
   if (delta.status === "human-review-required")
     return { label: "HUMAN REVIEW", className: "blocked" };
   if (delta.status === "proposal-ready")
@@ -195,8 +200,11 @@ function blockerItems(delta) {
 
 function renderDelta(delta) {
   if (!delta) {
-    return `
-      <p class="review-empty">Contract Delta is unavailable for this checkpoint.</p>`;
+    return '<p class="review-empty">Contract Delta is unavailable for this checkpoint.</p>';
+  }
+  if (delta.status === "unavailable") {
+    const detail = delta.detail ? ` ${delta.detail}` : "";
+    return `<p class="review-empty">Contract Delta was not derived: ${escapeHtml(delta.reason || "unavailable")}.${escapeHtml(detail)}</p>`;
   }
   if (delta.status === "not-applicable") {
     return `
@@ -269,7 +277,12 @@ function renderTrust(review) {
     {
       label: "Counterfactual replay",
       value: replay,
-      state: replay === "compliant" ? "ok" : replay === "violated" ? "warn" : "neutral",
+      state:
+        replay === "compliant"
+          ? "ok"
+          : replay === "violated"
+            ? "warn"
+            : "neutral",
     },
     {
       label: "Auto privilege escalation",
@@ -294,7 +307,10 @@ function renderTrust(review) {
 function renderDisclosure(checkpoint, review) {
   const disclosure = review?.disclosure;
   if (!disclosure || disclosure.status === "unavailable") {
-    return `<p class="review-empty">Minimum-disclosure preview is unavailable because its source evidence could not be verified.</p>`;
+    return `<p class="review-empty">Minimum-disclosure preview is unavailable: ${escapeHtml(disclosure?.reason || "source evidence was not verified")}.</p>`;
+  }
+  if (disclosure.status !== "verified") {
+    return `<p class="review-empty">The Disclosure Capsule preview did not verify: ${escapeHtml(disclosure.reason || disclosure.status)}. Do not treat it as share-ready evidence.</p>`;
   }
   const omitted = disclosure.omitted || [];
   const receipt = disclosure.receiptId;

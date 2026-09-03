@@ -1,10 +1,24 @@
+.flow-step.complete,
+.flow-step.complete b {
+  color: #8f97a5;
+}
+
+.flow-step.guarded,
+.flow-step.guarded b {
+  color: var(--violet-bright);
+}
+
 .review-plane {
   margin-top: 12px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 16% 0%, rgba(154, 124, 255, 0.08), transparent 30%),
+    radial-gradient(
+      circle at 16% 0%,
+      rgba(154, 124, 255, 0.08),
+      transparent 30%
+    ),
     rgba(10, 12, 16, 0.96);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
 }
@@ -78,7 +92,10 @@
 
 .review-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(250px, 0.8fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, 0.8fr) minmax(
+      300px,
+      1fr
+    );
 }
 
 .review-card {

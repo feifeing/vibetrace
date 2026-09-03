@@ -30,6 +30,7 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run check
+      - run: npm run rights:check
       - run: npm test
 
   package:

@@ -51,7 +51,7 @@ test("the evidence workspace replays authority, review, and disclosure evidence"
     "DISCLOSURE RECEIPT",
   );
   await expect(page.locator(".historical-review-card")).toContainText(
-    "HISTORICAL EFFECT REVIEW",
+    "Historical effect review",
   );
   await expect(page.locator(".historical-review-card")).toContainText(
     "FOLLOW-UP",

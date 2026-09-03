@@ -139,6 +139,22 @@ try {
     "packed CLI should verify its checkpoint",
   );
 
+  const capsuleResult = JSON.parse(runCli(cli, project, ["capsule", "--json"]));
+  const capsuleBytes = await readFile(capsuleResult.path, "utf8");
+  assert.equal(
+    capsuleBytes.includes("Package smoke change"),
+    false,
+    "minimum-disclosure capsule should omit prompt text by default",
+  );
+  const capsuleVerification = JSON.parse(
+    runCli(cli, project, ["capsule", "--verify", capsuleResult.path, "--json"]),
+  );
+  assert.equal(
+    capsuleVerification.valid,
+    true,
+    "packed CLI should verify its Disclosure Receipt",
+  );
+
   const preview = runCli(cli, project, ["restore", "--json"]);
   assert.equal(JSON.parse(preview).canApply, true);
   runCli(cli, project, ["restore", "--apply"]);

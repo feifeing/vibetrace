@@ -2,7 +2,7 @@
 
 VibeTrace should make AI-generated changes easier to inspect, not add another layer of mystery. Contributions are welcome when they strengthen this evidence chain:
 
-`Prompt intent → code change → Blast Radius → visual evidence → risk → replay / restore`
+`Intent → Authority → Effect → Review → Disclosure`
 
 ## Before opening a pull request
 
@@ -12,6 +12,7 @@ VibeTrace should make AI-generated changes easier to inspect, not add another la
 4. Include before/after images for interface changes.
 5. Do not describe a heuristic as AI certainty or a pixel change as a semantic regression.
 6. Identify any third-party code, assets, datasets, examples, or generated material introduced by the change and document the source and applicable license/permission.
+7. Run the rights/release gate when dependencies, package metadata, web assets, fonts, notices, or release behavior change.
 
 ## Contribution rights and provenance
 
@@ -29,7 +30,7 @@ If a contribution is derived from another open-source project, identify the sour
 
 Maintainers may require a Developer Certificate of Origin (DCO) sign-off or another contribution mechanism before accepting third-party contributions as the project matures. A sign-off is not currently a substitute for actually having the rights described above.
 
-See [`LEGAL.md`](LEGAL.md) for the project's broader copyright, trademark, privacy, and third-party boundaries.
+See [`LEGAL.md`](LEGAL.md), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), and [`docs/asset-provenance.md`](docs/asset-provenance.md) for the project's broader copyright, trademark, privacy, dependency, and asset boundaries.
 
 ## Local setup
 
@@ -47,6 +48,7 @@ Useful focused commands:
 npm test             # core, Git, schema, CLI, and visual unit tests
 npm run test:e2e     # Chromium interaction and responsive checks
 npm run check        # JavaScript syntax and JSON validation
+npm run rights:check # dependency/license, package-notice, and asset-release baseline
 npm run format       # apply repository formatting
 npm run dev          # run the interactive report at 127.0.0.1:4173
 ```
@@ -55,9 +57,10 @@ npm run dev          # run the interactive report at 127.0.0.1:4173
 
 - Git commands belong in `src/git/`; use `execFileSync` argument arrays, never shell-interpolated commands.
 - Prompt inference and risk scoring must remain deterministic and separately testable.
-- Schema changes require a version change and migration/compatibility discussion.
+- Explicit authorization, inferred intent, review proposals, and disclosure authority must remain semantically distinct.
+- Schema/evidence-version changes require a migration/compatibility discussion.
 - The CLI executable should stay thin; behavior belongs in importable modules.
-- The browser report consumes checkpoint data. Do not duplicate risk logic in the UI.
+- The browser report consumes checkpoint data. Do not duplicate policy or risk logic in the UI.
 - Optional visual dependencies must fail with an actionable message while the core Git workflow keeps working.
 
 ## Testing Git behavior
@@ -72,7 +75,7 @@ Prefer one coherent capability per pull request. A good description answers:
 - Which evidence is captured or improved?
 - What could be misclassified?
 - How was the change verified?
-- Did the checkpoint schema or risk score move?
+- Did the checkpoint schema, evidence coverage, authorization model, or risk score move?
 - Did the change introduce any third-party material, new data flow, external service, telemetry, or redistribution obligation?
 
 Maintainers may ask broad feature proposals to begin as an issue so the product boundary stays sharp.

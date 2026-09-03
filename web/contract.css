@@ -62,10 +62,6 @@
   padding: 10px;
 }
 
-.contract-grid > div:last-child {
-  grid-column: 1 / -1;
-}
-
 .contract-grid span,
 .contract-verdict span,
 .receipt-chip span {
@@ -179,9 +175,5 @@
 @media (max-width: 780px) {
   .contract-grid {
     grid-template-columns: 1fr;
-  }
-
-  .contract-grid > div:last-child {
-    grid-column: auto;
   }
 }

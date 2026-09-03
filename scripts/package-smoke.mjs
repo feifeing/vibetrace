@@ -139,6 +139,13 @@ try {
     "packed CLI should verify its checkpoint",
   );
 
+  const contractDelta = JSON.parse(
+    runCli(cli, project, ["contract-delta", "--json"]),
+  );
+  assert.equal(contractDelta.status, "already-compliant");
+  assert.equal(contractDelta.sourceReceiptVerified, true);
+  assert.equal(contractDelta.gitEffectRecomputed, true);
+
   const capsuleResult = JSON.parse(runCli(cli, project, ["capsule", "--json"]));
   const capsuleBytes = await readFile(capsuleResult.path, "utf8");
   assert.equal(

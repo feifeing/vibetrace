@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { createChangeContract, evaluateChangeContract } from "./contract.mjs";
+import { verifyEvidenceReceipt } from "./receipt.mjs";
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -110,12 +111,18 @@ export function computeObservedContractDelta(checkpoint) {
   if (checkpoint?.status !== "completed" || !checkpoint?.analysis?.files) {
     throw new Error("A completed checkpoint with observed file evidence is required.");
   }
+  const sourceVerification = verifyEvidenceReceipt(checkpoint);
+  if (!sourceVerification.valid) {
+    throw new Error(
+      `Refusing to propose authorization changes from unverified evidence: ${sourceVerification.reason}.`,
+    );
+  }
   if (!checkpoint.authorization) {
     return {
       version: 1,
       kind: "vibetrace-observed-contract-delta",
       checkpointId: checkpoint.id,
-      sourceEvidenceReceiptId: checkpoint.receipt?.receiptId || null,
+      sourceEvidenceReceiptId: checkpoint.receipt.receiptId,
       status: "not-applicable",
       reason: "no-explicit-change-contract",
       note:
@@ -169,7 +176,7 @@ export function computeObservedContractDelta(checkpoint) {
 
   const receiptBody = {
     checkpointId: checkpoint.id,
-    sourceEvidenceReceiptId: checkpoint.receipt?.receiptId || null,
+    sourceEvidenceReceiptId: checkpoint.receipt.receiptId,
     originalContractSha256: sha256(original),
     observedEffectSha256: sha256(files),
     delta,
@@ -181,7 +188,8 @@ export function computeObservedContractDelta(checkpoint) {
     version: 1,
     kind: "vibetrace-observed-contract-delta",
     checkpointId: checkpoint.id,
-    sourceEvidenceReceiptId: checkpoint.receipt?.receiptId || null,
+    sourceEvidenceReceiptId: checkpoint.receipt.receiptId,
+    sourceEvidenceVerified: true,
     status,
     originalCompliance: compliance,
     observed,

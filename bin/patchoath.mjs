@@ -62,13 +62,13 @@ const io = brandedIo();
 try {
   if (process.argv[2] === "attest") {
     const { runAttest } = await import("../src/attest.mjs");
-    process.exitCode = await runAttest(process.argv.slice(3));
+    process.exitCode = await runAttest(process.argv.slice(3), io);
   } else if (process.argv[2] === "verify") {
     const { runVerify } = await import("../src/verify.mjs");
     process.exitCode = await runVerify(process.argv.slice(3), io);
   } else if (process.argv[2] === "restore") {
     const { runRestore } = await import("../src/restore.mjs");
-    process.exitCode = await runRestore(process.argv.slice(3));
+    process.exitCode = await runRestore(process.argv.slice(3), io);
   } else if (process.argv[2] === "capsule") {
     const { runCapsule } = await import("../src/capsule.mjs");
     process.exitCode = await runCapsule(process.argv.slice(3), io);

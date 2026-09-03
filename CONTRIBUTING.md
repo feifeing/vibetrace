@@ -11,6 +11,25 @@ VibeTrace should make AI-generated changes easier to inspect, not add another la
 3. Add or update tests for behavior changes.
 4. Include before/after images for interface changes.
 5. Do not describe a heuristic as AI certainty or a pixel change as a semantic regression.
+6. Identify any third-party code, assets, datasets, examples, or generated material introduced by the change and document the source and applicable license/permission.
+
+## Contribution rights and provenance
+
+By intentionally submitting a contribution for inclusion in this project, you agree that the contribution may be distributed under the repository's MIT License and represent that you have the right to submit it on those terms.
+
+Do not submit:
+
+- proprietary employer or client code unless you are authorized to contribute it;
+- copied code or documentation whose license is incompatible with this repository;
+- third-party logos, screenshots, fonts, media, datasets, or substantial text without appropriate rights;
+- secrets, credentials, confidential material, or personal data that should not become public; or
+- AI-generated material when you cannot reasonably represent that you have the right to submit and license the resulting contribution.
+
+If a contribution is derived from another open-source project, identify the source repository, relevant file(s), upstream license, and any notices that must be preserved. When provenance or licensing is uncertain, open an issue before submitting the material.
+
+Maintainers may require a Developer Certificate of Origin (DCO) sign-off or another contribution mechanism before accepting third-party contributions as the project matures. A sign-off is not currently a substitute for actually having the rights described above.
+
+See [`LEGAL.md`](LEGAL.md) for the project's broader copyright, trademark, privacy, and third-party boundaries.
 
 ## Local setup
 
@@ -54,5 +73,6 @@ Prefer one coherent capability per pull request. A good description answers:
 - What could be misclassified?
 - How was the change verified?
 - Did the checkpoint schema or risk score move?
+- Did the change introduce any third-party material, new data flow, external service, telemetry, or redistribution obligation?
 
 Maintainers may ask broad feature proposals to begin as an issue so the product boundary stays sharp.

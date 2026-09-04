@@ -17,6 +17,14 @@ async function readText(path) {
   return readFile(join(root, path), "utf8");
 }
 
+function withoutMarkdownSection(text, heading) {
+  const marker = `${heading}\n`;
+  const start = text.indexOf(marker);
+  if (start < 0) return text;
+  const next = text.indexOf("\n## ", start + marker.length);
+  return `${text.slice(0, start)}${next < 0 ? "" : text.slice(next + 1)}`;
+}
+
 const packageJson = await readJson(join(root, "package.json"));
 const packageLock = await readJson(join(root, "package-lock.json"));
 
@@ -106,7 +114,6 @@ const retiredCommandPattern =
 const retiredProductPattern = /\bVibeTrace\b/u;
 
 for (const path of [
-  "README.md",
   "SECURITY.md",
   "CONTRIBUTING.md",
   "THIRD_PARTY_NOTICES.md",
@@ -126,6 +133,19 @@ if (!readme.includes('<h1 align="center">PatchOath</h1>')) {
 }
 if (!readme.includes("docs/patchoath-mark.svg")) {
   fail("README hero must use the reviewed PatchOath mark.");
+}
+if (!readme.includes("## Legacy compatibility")) {
+  fail("README must keep an explicit Legacy compatibility section during v0.3.");
+}
+const readmeOutsideLegacy = withoutMarkdownSection(
+  readme,
+  "## Legacy compatibility",
+);
+if (retiredProductPattern.test(readmeOutsideLegacy)) {
+  fail("README contains the retired VibeTrace product name outside Legacy compatibility.");
+}
+if (retiredCommandPattern.test(readmeOutsideLegacy)) {
+  fail("README contains a retired vibetrace CLI example outside Legacy compatibility.");
 }
 
 const webDirectory = join(root, "web");
@@ -203,9 +223,11 @@ const scannedTextExtensions = new Set([
 
 // These files are allowed to name the retired product only because their
 // purpose is migration provenance, legal history, compatibility, or the gate
-// that enforces this list. Ordinary product/source surfaces are not allowlisted.
+// that enforces this list. README is checked separately with only its explicit
+// Legacy compatibility section removed from the retired-brand scan.
 const legacyBrandAllowlist = new Set([
   "LEGAL.md",
+  "README.md",
   "bin/vibetrace.mjs",
   "docs/brand-clearance.md",
   "docs/evidence-receipts.md",
@@ -259,6 +281,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, retired-brand strings are confined to the explicit migration/compatibility allowlist, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
+    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, retired-brand strings are confined to explicit migration/compatibility contexts, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
   );
 }

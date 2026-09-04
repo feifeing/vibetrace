@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { brandedIo } from "../src/core/brand-io.mjs";
 import { BRAND_NAME, CLI_NAME, TAGLINE, VERSION } from "../src/core/brand.mjs";
 
 const HELP = `${BRAND_NAME} ${VERSION} — ${TAGLINE}\n\nUsage:\n  ${CLI_NAME} init\n  ${CLI_NAME} checkpoint --prompt "Change the primary button color" [contract options]\n  ${CLI_NAME} checkpoint --finish\n  ${CLI_NAME} diff [checkpoint] [--json] [--patch]\n  ${CLI_NAME} attest --prompt "…" [contract options]\n  ${CLI_NAME} verify [checkpoint] [--json]\n  ${CLI_NAME} contract-delta [checkpoint] [--json]\n  ${CLI_NAME} review [checkpoint] --accept-effect|--reject-effect|--needs-follow-up\n  ${CLI_NAME} capsule [checkpoint] [options]\n  ${CLI_NAME} replay [--json]\n  ${CLI_NAME} session [new] [--name "…"] [--json]\n  ${CLI_NAME} report [checkpoint] [--open]\n  ${CLI_NAME} restore [checkpoint] [--apply] [--json]\n\nChange Contract options:\n  --allow <glob,...>             Paths the change may touch\n  --deny <glob,...>              Paths the change must not touch\n  --protect-surface <names,...>  Sensitive deterministic repository surfaces\n  --max-files <n>                Maximum changed files\n  --max-lines <n>                Maximum inserted + deleted lines\n  --max-modules <n>              Maximum touched modules\n\nTrust boundary:\n  Intent is context, not permission. Historical review is not future authority.\n  A full local report is not automatically safe to disclose.\n\nOptions:\n  -h, --help       Show this help\n  -v, --version    Show the PatchOath version`;
@@ -74,7 +73,7 @@ async function runInit(stdout) {
   return 0;
 }
 
-const io = brandedIo();
+const io = { stdout: process.stdout, stderr: process.stderr };
 const topLevel = process.argv.slice(2);
 
 try {

@@ -6,7 +6,7 @@ import { verifyEvidenceReceipt } from "./core/receipt.mjs";
 import { listCheckpoints } from "./core/store.mjs";
 import { findRepositoryRoot, runGit } from "./git/git.mjs";
 
-const HELP = `patchoath verify [checkpoint] [--json]\n\nRecompute a completed checkpoint's Evidence Receipt and verify referenced Git/visual evidence when present.\nThe command exits 0 when evidence verifies and 2 when metadata, Git evidence, or artifact evidence no longer matches. Receipt coverage is versioned; legacy VibeTrace receipts and refs remain verifiable with their original scope.\n\nOptions:\n  --json     Emit machine-readable verification output\n  -h, --help Show help`;
+const HELP = `patchoath verify [checkpoint] [--json]\n\nRecompute a completed checkpoint's Evidence Receipt and verify referenced Git/visual evidence when present.\nThe command exits 0 when evidence verifies and 2 when metadata, Git evidence, or artifact evidence no longer matches. Receipt coverage is versioned; pre-v0.3 receipts and refs remain verifiable with their original scope.\n\nOptions:\n  --json     Emit machine-readable verification output\n  -h, --help Show help`;
 
 function parse(argv) {
   const options = new Set();

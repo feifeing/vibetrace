@@ -135,17 +135,23 @@ if (!readme.includes("docs/patchoath-mark.svg")) {
   fail("README hero must use the reviewed PatchOath mark.");
 }
 if (!readme.includes("## Legacy compatibility")) {
-  fail("README must keep an explicit Legacy compatibility section during v0.3.");
+  fail(
+    "README must keep an explicit Legacy compatibility section during v0.3.",
+  );
 }
 const readmeOutsideLegacy = withoutMarkdownSection(
   readme,
   "## Legacy compatibility",
 );
 if (retiredProductPattern.test(readmeOutsideLegacy)) {
-  fail("README contains the retired VibeTrace product name outside Legacy compatibility.");
+  fail(
+    "README contains the retired VibeTrace product name outside Legacy compatibility.",
+  );
 }
 if (retiredCommandPattern.test(readmeOutsideLegacy)) {
-  fail("README contains a retired vibetrace CLI example outside Legacy compatibility.");
+  fail(
+    "README contains a retired vibetrace CLI example outside Legacy compatibility.",
+  );
 }
 
 const webDirectory = join(root, "web");

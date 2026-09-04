@@ -11,6 +11,7 @@ export const REF_NAMESPACE = "refs/patchoath";
 export const LEGACY_REF_NAMESPACE = "refs/vibetrace";
 
 export const CHECKPOINT_ID_PREFIX = "po";
+export const LEGACY_CHECKPOINT_ID_PREFIX = "vt";
 export const EVIDENCE_RECEIPT_PREFIX = "poe";
 export const CONTRACT_DELTA_RECEIPT_PREFIX = "pocd";
 export const DISCLOSURE_RECEIPT_PREFIX = "pod";

@@ -64,21 +64,23 @@ The purpose of this list is provenance and future naming discipline, not an alle
 
 ## Compatibility policy
 
-The new public product identity is PatchOath, but v0.3 intentionally keeps historical evidence verifiable:
+The new public product identity is PatchOath, but v0.3 intentionally keeps historical evidence usable and verifiable:
 
 ```text
-new local store      .patchoath/
-legacy local store   .vibetrace/        (read compatibility)
+fresh local store      .patchoath/
+legacy local store     .vibetrace/        (in-place compatibility; no implicit move)
 
-new Git refs         refs/patchoath/...
-legacy Git refs      refs/vibetrace/... (verification compatibility)
+new Git refs           refs/patchoath/...
+legacy Git refs        refs/vibetrace/... (verification compatibility)
 
-new checkpoint IDs   po_...
-new evidence IDs     poe_...
-new delta IDs        pocd_...
-new disclosure IDs   pod_...
-new review IDs       por_...
+new checkpoint IDs     po_...
+new evidence IDs       poe_...
+new delta IDs          pocd_...
+new disclosure IDs     pod_...
+new review IDs         por_...
 ```
+
+If a repository already has `.vibetrace/`, PatchOath may continue using that physical store so the rename does not silently relocate or rewrite historical checkpoint data. New evidence created through PatchOath still uses the PatchOath ID and Git-ref namespaces. A fresh repository creates `.patchoath/`.
 
 Legacy `vt_`, `vtr_`, `vtcd_`, `vtd_`, and `vrr_` evidence remains a compatibility concern and must not be silently invalidated merely to make the repository appear fully renamed.
 
@@ -88,4 +90,4 @@ The legacy `vibetrace` CLI name is retained only as a deprecated migration shim 
 
 The package remains private during the migration and final technical audit. Making the npm package public, registering a trademark, purchasing domains, or relying on the name for significant commercial investment should remain explicit decisions rather than side effects of a code rename.
 
-For commercial release, a qualified professional should perform a jurisdiction- and class-specific trademark clearance/FTO review appropriate to the intended markets. No statement in this repository should be read as a guarantee of non-infringement.
+For commercial release, a qualified professional should perform a jurisdiction- and class-specific trademark clearance appropriate to the intended markets; patent/freedom-to-operate analysis is a separate question when commercially material. No statement in this repository should be read as a guarantee of non-infringement.

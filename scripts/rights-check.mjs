@@ -13,18 +13,27 @@ async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
 }
 
+async function readText(path) {
+  return readFile(join(root, path), "utf8");
+}
+
 const packageJson = await readJson(join(root, "package.json"));
 const packageLock = await readJson(join(root, "package-lock.json"));
 
 if (packageJson.name !== "patchoath") {
-  fail(`Unexpected package name: ${packageJson.name || "missing"}; expected patchoath.`);
+  fail(
+    `Unexpected package name: ${packageJson.name || "missing"}; expected patchoath.`,
+  );
 }
 if (packageJson.version !== packageLock.version) {
   fail(
     `package.json and package-lock.json versions differ (${packageJson.version} vs ${packageLock.version}).`,
   );
 }
-if (packageLock.name !== "patchoath" || packageLock.packages?.[""]?.name !== "patchoath") {
+if (
+  packageLock.name !== "patchoath" ||
+  packageLock.packages?.[""]?.name !== "patchoath"
+) {
   fail("package-lock.json root package metadata must use the PatchOath package name.");
 }
 if (packageJson.bin?.patchoath !== "./bin/patchoath.mjs") {
@@ -44,6 +53,11 @@ if (packageJson.license !== "MIT") {
   fail(
     `Unexpected repository package license: ${packageJson.license || "missing"}.`,
   );
+}
+if (!String(packageJson.description || "").includes("PatchOath") && false) {
+  // The npm `description` intentionally describes the product without repeating
+  // its package name. Keep this branch as documentation that name repetition is
+  // not a release requirement.
 }
 
 const requiredPackageFiles = ["LICENSE", "LEGAL.md", "THIRD_PARTY_NOTICES.md"];
@@ -80,6 +94,7 @@ for (const required of [
   "THIRD_PARTY_NOTICES.md",
   "docs/asset-provenance.md",
   "docs/brand-clearance.md",
+  "docs/patchoath-mark.svg",
   "docs/release-readiness.md",
 ]) {
   try {
@@ -89,11 +104,60 @@ for (const required of [
   }
 }
 
+// Public product surfaces must not drift back to the retired working brand.
+// Historical/legal/migration records are deliberately excluded from this list.
+for (const path of [
+  "README.md",
+  "SECURITY.md",
+  "CONTRIBUTING.md",
+  "THIRD_PARTY_NOTICES.md",
+]) {
+  const text = await readText(path);
+  if (/\bVibeTrace\b/u.test(text)) {
+    fail(`${path} contains the retired VibeTrace product name.`);
+  }
+  if (/\bvibetrace\s+(?:init|checkpoint|diff|attest|verify|restore|capsule|contract-delta|review|replay|session|report)\b/u.test(text)) {
+    fail(`${path} contains a retired vibetrace CLI example.`);
+  }
+}
+
+const readme = await readText("README.md");
+if (!readme.includes("<h1 align=\"center\">PatchOath</h1>")) {
+  fail("README hero must identify the product as PatchOath.");
+}
+if (!readme.includes("docs/patchoath-mark.svg")) {
+  fail("README hero must use the reviewed PatchOath mark.");
+}
+
 const webDirectory = join(root, "web");
 const html = await readFile(join(webDirectory, "index.html"), "utf8");
 const cssFiles = (await readdir(webDirectory))
   .filter((name) => name.endsWith(".css"))
   .sort();
+const jsFiles = (await readdir(webDirectory))
+  .filter((name) => name.endsWith(".js"))
+  .sort();
+
+if (!html.includes("<title>PatchOath —")) {
+  fail("web/index.html must expose the PatchOath product title.");
+}
+if (/\bVibeTrace\b/u.test(html)) {
+  fail("web/index.html contains the retired VibeTrace product name.");
+}
+if (/\bvibetrace\s+/u.test(html)) {
+  fail("web/index.html contains a retired vibetrace CLI example.");
+}
+
+for (const name of jsFiles) {
+  const text = await readFile(join(webDirectory, name), "utf8");
+  if (/\bVibeTrace\b/u.test(text)) {
+    fail(`${name} contains the retired VibeTrace product name in dashboard code.`);
+  }
+  if (/['"`]vibetrace\s+(?:init|checkpoint|diff|attest|verify|restore|capsule|contract-delta|review|replay|session|report)\b/u.test(text)) {
+    fail(`${name} contains a retired vibetrace CLI command string.`);
+  }
+}
+
 const remoteAssetTag =
   /<(?:img|script|link)\b[^>]*(?:src|href)=["']https?:\/\//giu;
 if (remoteAssetTag.test(html)) {
@@ -149,6 +213,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
+    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, public product surfaces contain no retired-brand copy or CLI examples, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
   );
 }

@@ -228,7 +228,7 @@ export async function generateReport(root, checkpoints, selectedId) {
   };
   await writeFile(
     join(reportDirectory, "report-data.js"),
-    `window.__PATCHOATH_REPORT__ = ${JSON.stringify(payload, null, 2)};\nwindow.__VIBETRACE_REPORT__ = window.__PATCHOATH_REPORT__;\n`,
+    `window.__PATCHOATH_REPORT__ = ${JSON.stringify(payload, null, 2)};\n`,
     "utf8",
   );
 

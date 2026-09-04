@@ -60,14 +60,33 @@ async function applyCheckpointContract(argv) {
   return clean;
 }
 
+async function runInit(io) {
+  const { findRepositoryRoot } = await import("../src/git/git.mjs");
+  const { initializeStore } = await import("../src/core/store.mjs");
+  const root = findRepositoryRoot(process.cwd());
+  const result = await initializeStore(root);
+  const suffix = result.legacyStore
+    ? " (legacy compatibility store; evidence is not rewritten)"
+    : " (kept local through .git/info/exclude)";
+  io.stdout.write(
+    `${result.created ? "initialized" : "ready"} ${result.paths.directoryName}/${suffix}\n`,
+  );
+  return 0;
+}
+
 const io = brandedIo();
 const topLevel = process.argv.slice(2);
 
 try {
   if (topLevel.length === 1 && ["--version", "-v"].includes(topLevel[0])) {
     io.stdout.write(`${VERSION}\n`);
-  } else if (topLevel.length === 0 || (topLevel.length === 1 && ["--help", "-h"].includes(topLevel[0]))) {
+  } else if (
+    topLevel.length === 0 ||
+    (topLevel.length === 1 && ["--help", "-h"].includes(topLevel[0]))
+  ) {
     io.stdout.write(`${HELP}\n`);
+  } else if (topLevel.length === 1 && topLevel[0] === "init") {
+    process.exitCode = await runInit(io);
   } else if (process.argv[2] === "attest") {
     const { runAttest } = await import("../src/attest.mjs");
     process.exitCode = await runAttest(process.argv.slice(3), io);

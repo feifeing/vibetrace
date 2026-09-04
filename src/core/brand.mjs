@@ -10,6 +10,7 @@ export const LEGACY_STORE_DIRECTORY_NAME = ".vibetrace";
 export const REF_NAMESPACE = "refs/patchoath";
 export const LEGACY_REF_NAMESPACE = "refs/vibetrace";
 
+// Modern prefixes identify evidence created by PatchOath v0.3 and later.
 export const CHECKPOINT_ID_PREFIX = "po";
 export const LEGACY_CHECKPOINT_ID_PREFIX = "vt";
 export const EVIDENCE_RECEIPT_PREFIX = "poe";

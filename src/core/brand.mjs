@@ -17,6 +17,7 @@ export const CONTRACT_DELTA_RECEIPT_PREFIX = "pocd";
 export const DISCLOSURE_RECEIPT_PREFIX = "pod";
 export const REVIEW_RECORD_PREFIX = "por";
 
+// Legacy prefixes remain verification inputs only; new evidence uses PatchOath namespaces.
 export const LEGACY_EVIDENCE_RECEIPT_PREFIX = "vtr";
 export const LEGACY_CONTRACT_DELTA_RECEIPT_PREFIX = "vtcd";
 export const LEGACY_DISCLOSURE_RECEIPT_PREFIX = "vtd";

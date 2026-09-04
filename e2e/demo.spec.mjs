@@ -47,7 +47,9 @@ test("PatchOath replays authority, review, and disclosure evidence", async ({
     "recomputed from objects",
   );
   await expect(page.locator(".trust-card")).toContainText("effect-manifest-v2");
-  await expect(page.locator(".review-receipt")).toContainText("pocd_");
+  await expect(page.locator(".trust-card .review-receipt code")).toContainText(
+    "pocd_",
+  );
   await expect(page.locator(".disclosure-card")).toContainText(
     "This browser report is not a share-safe Capsule.",
   );

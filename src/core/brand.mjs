@@ -1,6 +1,8 @@
 export const BRAND_NAME = "PatchOath";
 export const CLI_NAME = "patchoath";
 export const PACKAGE_NAME = "patchoath";
+export const VERSION = "0.3.0";
+export const TAGLINE = "Make every AI patch prove it stayed in scope.";
 
 export const STORE_DIRECTORY_NAME = ".patchoath";
 export const LEGACY_STORE_DIRECTORY_NAME = ".vibetrace";

@@ -80,7 +80,10 @@ async function ensureLocalExclude(root) {
     if (error.code !== "ENOENT") throw error;
   }
 
-  const required = [`/${STORE_DIRECTORY_NAME}/`, `/${LEGACY_STORE_DIRECTORY_NAME}/`];
+  const required = [
+    `/${STORE_DIRECTORY_NAME}/`,
+    `/${LEGACY_STORE_DIRECTORY_NAME}/`,
+  ];
   const lines = existing.split(/\r?\n/u);
   const missing = required.filter((line) => !lines.includes(line));
   if (missing.length === 0) return;
@@ -100,7 +103,8 @@ function normalizeNewCheckpointRefs(checkpoint) {
     if (typeof ref !== "string") continue;
     const legacyPrefix = `${LEGACY_REF_NAMESPACE}/checkpoints/`;
     if (ref.startsWith(legacyPrefix)) {
-      checkpoint[phase].ref = `${REF_NAMESPACE}${ref.slice(LEGACY_REF_NAMESPACE.length)}`;
+      checkpoint[phase].ref =
+        `${REF_NAMESPACE}${ref.slice(LEGACY_REF_NAMESPACE.length)}`;
     }
   }
   return checkpoint;

@@ -121,7 +121,10 @@ test("two-phase PatchOath CLI creates a readable checkpoint and rejects an empty
   assert.match(raw.before.ref, /^refs\/patchoath\//u);
   assert.match(raw.after.ref, /^refs\/patchoath\//u);
 
-  assert.equal(invoke(root, ["session", "new", "--name", "Second pass"]).code, 0);
+  assert.equal(
+    invoke(root, ["session", "new", "--name", "Second pass"]).code,
+    0,
+  );
   const emptyReplay = invoke(root, ["replay"]);
   assert.equal(emptyReplay.code, 1);
   assert.match(emptyReplay.stderr, /No checkpoints exist/iu);

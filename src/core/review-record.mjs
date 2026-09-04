@@ -33,7 +33,9 @@ function sha256(value) {
 }
 
 function reviewRecordId(body, legacyPrefix = false) {
-  const prefix = legacyPrefix ? LEGACY_REVIEW_RECORD_PREFIX : REVIEW_RECORD_PREFIX;
+  const prefix = legacyPrefix
+    ? LEGACY_REVIEW_RECORD_PREFIX
+    : REVIEW_RECORD_PREFIX;
   return `${prefix}_${sha256(body).slice(0, 24)}`;
 }
 

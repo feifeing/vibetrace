@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { access, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  access,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { createEvidenceReceipt } from "../src/core/receipt.mjs";
@@ -90,11 +97,7 @@ test("fresh repositories use only the PatchOath store and modern evidence namesp
   assert.equal(await pathExists(join(root, ".patchoath")), true);
   assert.equal(await pathExists(join(root, ".vibetrace")), false);
 
-  run(patchoath, root, [
-    "checkpoint",
-    "--prompt",
-    "Change the app value",
-  ]);
+  run(patchoath, root, ["checkpoint", "--prompt", "Change the app value"]);
   await writeFile(join(root, "app.js"), "export const value = 2;\n", "utf8");
   run(patchoath, root, ["checkpoint", "--finish"]);
 
@@ -131,11 +134,7 @@ test("PatchOath verifies legacy receipts/refs without silently moving the legacy
     "utf8",
   );
   for (const phase of ["before", "after"]) {
-    git(root, [
-      "update-ref",
-      checkpoint[phase].ref,
-      checkpoint[phase].commit,
-    ]);
+    git(root, ["update-ref", checkpoint[phase].ref, checkpoint[phase].commit]);
   }
 
   assert.match(checkpoint.receipt.receiptId, /^vtr_/u);
@@ -149,7 +148,10 @@ test("PatchOath verifies legacy receipts/refs without silently moving the legacy
     run(patchoath, root, ["verify", checkpoint.id, "--json"]),
   );
   assert.equal(verification.valid, true);
-  assert.equal(verification.receipt.actualReceiptId, checkpoint.receipt.receiptId);
+  assert.equal(
+    verification.receipt.actualReceiptId,
+    checkpoint.receipt.receiptId,
+  );
   assert.equal(verification.receipt.coverage.scope, "legacy-v1");
   assert.ok(
     verification.gitEvidence.every((item) =>
@@ -160,7 +162,10 @@ test("PatchOath verifies legacy receipts/refs without silently moving the legacy
   const storedAfterVerify = JSON.parse(
     await readFile(join(checkpointDirectory, `${checkpoint.id}.json`), "utf8"),
   );
-  assert.equal(storedAfterVerify.receipt.receiptId, checkpoint.receipt.receiptId);
+  assert.equal(
+    storedAfterVerify.receipt.receiptId,
+    checkpoint.receipt.receiptId,
+  );
   assert.equal(storedAfterVerify.before.ref, checkpoint.before.ref);
   assert.equal(storedAfterVerify.after.ref, checkpoint.after.ref);
 });

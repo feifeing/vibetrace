@@ -1,5 +1,4 @@
-const reportData =
-  window.__PATCHOATH_REPORT__ || window.__VIBETRACE_REPORT__;
+const reportData = window.__PATCHOATH_REPORT__ || window.__VIBETRACE_REPORT__;
 const checkpointId = document.getElementById("checkpointId");
 const reviewPlane = document.getElementById("reviewPlane");
 
@@ -32,8 +31,7 @@ const demoHistoricalReviews = {
     },
     sourceReceiptCurrent: { valid: true, reason: "verified" },
     reportVerificationScope: "record-integrity-plus-source-receipt",
-    fullVerifyCommand:
-      "patchoath review --verify por_61d1ad8d769fa25cc28d829a",
+    fullVerifyCommand: "patchoath review --verify por_61d1ad8d769fa25cc28d829a",
     authorityBoundary: {
       historicalEffectOnly: true,
       changeContractMutated: false,
@@ -62,8 +60,7 @@ const demoHistoricalReviews = {
     },
     sourceReceiptCurrent: { valid: true, reason: "verified" },
     reportVerificationScope: "record-integrity-plus-source-receipt",
-    fullVerifyCommand:
-      "patchoath review --verify por_4b72c436cdac2f91b702b975",
+    fullVerifyCommand: "patchoath review --verify por_4b72c436cdac2f91b702b975",
     authorityBoundary: {
       historicalEffectOnly: true,
       changeContractMutated: false,

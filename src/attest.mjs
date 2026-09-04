@@ -53,7 +53,9 @@ function printHuman(checkpoint, stdout) {
   const contract = checkpoint.authorization;
   const compliance = analysis.contractCompliance;
   stdout.write("\n");
-  stdout.write(`✦ PatchOath scope attestation ${checkpoint.receipt.receiptId}\n`);
+  stdout.write(
+    `✦ PatchOath scope attestation ${checkpoint.receipt.receiptId}\n`,
+  );
   stdout.write(`  prompt       ${checkpoint.prompt.text}\n`);
   stdout.write(
     `  contract     allow=${contract.allow.join(",") || "*"} deny=${contract.deny.join(",") || "none"}\n`,

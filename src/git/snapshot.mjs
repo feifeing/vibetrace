@@ -27,7 +27,14 @@ export async function createWorktreeSnapshot(root, label = "working tree") {
     const tree = runGit(root, ["write-tree"], { env }).trim();
     const commit = runGit(
       root,
-      ["commit-tree", tree, "-p", head, "-m", `${BRAND_NAME} snapshot: ${label}`],
+      [
+        "commit-tree",
+        tree,
+        "-p",
+        head,
+        "-m",
+        `${BRAND_NAME} snapshot: ${label}`,
+      ],
       { env },
     ).trim();
     return { commit, tree, head };

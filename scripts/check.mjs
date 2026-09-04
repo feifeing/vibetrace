@@ -45,7 +45,9 @@ if (packageJson.name !== "patchoath")
 if (packageJson.bin?.patchoath !== "./bin/patchoath.mjs")
   throw new Error("The patchoath bin entry is missing.");
 if (packageJson.bin?.vibetrace !== "./bin/vibetrace.mjs")
-  throw new Error("The temporary legacy vibetrace compatibility bin is missing.");
+  throw new Error(
+    "The temporary legacy vibetrace compatibility bin is missing.",
+  );
 
 console.log(
   `Checked ${files.length} files: JavaScript syntax and JSON are valid for PatchOath v0.3.`,

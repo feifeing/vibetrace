@@ -47,18 +47,18 @@ The rename therefore reduces avoidable product-name confusion while preserving h
 
 The following candidates were deliberately not adopted because public searches found existing or adjacent uses, weak distinctiveness, or an undesirable collision surface:
 
-| Candidate | Reason rejected |
-| --- | --- |
-| PromptLatch | Existing LLM/security tooling use |
-| DriftLatch | Existing commercial product use |
-| ScopeProof | Multiple active product/software uses |
-| ScopeLatch | Existing public software/type usage; weak uniqueness |
+| Candidate                     | Reason rejected                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| PromptLatch                   | Existing LLM/security tooling use                                                                            |
+| DriftLatch                    | Existing commercial product use                                                                              |
+| ScopeProof                    | Multiple active product/software uses                                                                        |
+| ScopeLatch                    | Existing public software/type usage; weak uniqueness                                                         |
 | PatchMandate / Mandate family | `patch mandate` is established security/compliance language and Mandate has adjacent agent-authorization use |
-| Warrant family | Existing AI-agent evidence/attestation product use and adjacent `Change Warrant` terminology |
-| PatchSigil / Sigil family | Existing Sigil software brand and weaker search distinctiveness |
-| PatchPact | Existing contract-first GitHub/developer project with close conceptual overlap |
-| ScopePact | Existing agent authority/receipt product use |
-| PromptPact | Existing public name/application use |
+| Warrant family                | Existing AI-agent evidence/attestation product use and adjacent `Change Warrant` terminology                 |
+| PatchSigil / Sigil family     | Existing Sigil software brand and weaker search distinctiveness                                              |
+| PatchPact                     | Existing contract-first GitHub/developer project with close conceptual overlap                               |
+| ScopePact                     | Existing agent authority/receipt product use                                                                 |
+| PromptPact                    | Existing public name/application use                                                                         |
 
 The purpose of this list is provenance and future naming discipline, not an allegation that any listed project owns a broad software concept.
 

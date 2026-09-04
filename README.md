@@ -79,16 +79,16 @@ No language model is needed to decide that a file matching `src/auth/**` violate
 
 ## What PatchOath adds to a normal diff
 
-| Question | Evidence |
-| --- | --- |
-| What did I ask for? | Prompt + transparent intent inference |
-| What was actually permitted? | Explicit Change Contract |
-| What changed? | Before/after Git objects + normalized file manifest |
-| Did the patch cross the declared boundary? | Authorization Drift |
-| Why is the change worth reviewing? | Explainable Blast Radius + risk factors |
-| Can the captured evidence still be checked? | Versioned Evidence Receipt |
-| Did a human accept this historical effect? | Historical Effect Review Record |
-| What can I share without dumping the whole local report? | Minimum-disclosure Evidence Capsule |
+| Question                                                 | Evidence                                            |
+| -------------------------------------------------------- | --------------------------------------------------- |
+| What did I ask for?                                      | Prompt + transparent intent inference               |
+| What was actually permitted?                             | Explicit Change Contract                            |
+| What changed?                                            | Before/after Git objects + normalized file manifest |
+| Did the patch cross the declared boundary?               | Authorization Drift                                 |
+| Why is the change worth reviewing?                       | Explainable Blast Radius + risk factors             |
+| Can the captured evidence still be checked?              | Versioned Evidence Receipt                          |
+| Did a human accept this historical effect?               | Historical Effect Review Record                     |
+| What can I share without dumping the whole local report? | Minimum-disclosure Evidence Capsule                 |
 
 PatchOath is local-first, agent-agnostic, Git-compatible, and deliberately deterministic where a deterministic answer is possible.
 
@@ -223,13 +223,13 @@ patchoath checkpoint --finish
 patchoath report --open
 ```
 
-| Layer | Current support |
-| --- | --- |
-| Screenshot bytes | SHA-256 captured + re-hashed on verification |
-| Pixel difference | thresholded RGBA comparison |
-| Layout movement | basic visible-element movement / resize |
-| DOM change | basic fingerprint + visible-node delta |
-| Semantic correctness | **not inferred** |
+| Layer                | Current support                              |
+| -------------------- | -------------------------------------------- |
+| Screenshot bytes     | SHA-256 captured + re-hashed on verification |
+| Pixel difference     | thresholded RGBA comparison                  |
+| Layout movement      | basic visible-element movement / resize      |
+| DOM change           | basic fingerprint + visible-node delta       |
+| Semantic correctness | **not inferred**                             |
 
 Visual output can vary with browser build, OS, fonts, and rendering hardware. Prefer like-for-like environments.
 
@@ -246,21 +246,21 @@ Applying restore changes the worktree to the checkpoint before-state while prese
 
 ## CLI
 
-| Command | Purpose |
-| --- | --- |
-| `patchoath init` | initialize local `.patchoath/` evidence state |
-| `patchoath checkpoint --prompt "…"` | begin a two-phase checkpoint |
-| `patchoath checkpoint --finish` | capture the after-state and bind evidence |
-| `patchoath checkpoint --abort` | discard the active checkpoint |
-| `patchoath diff [id]` | inspect current or saved Blast Radius |
-| `patchoath attest …` | one-shot contract check for existing worktree changes |
-| `patchoath verify [id]` | recompute receipt and verify Git / visual evidence |
-| `patchoath contract-delta [id]` | compute a restricted evidence-bound authority delta |
-| `patchoath review …` | record or verify a historical human review |
-| `patchoath capsule …` | create or verify minimum-disclosure evidence |
-| `patchoath replay` | replay the current session timeline |
-| `patchoath report [id]` | generate a standalone local review report |
-| `patchoath restore [id]` | preview or safely apply a guarded restore |
+| Command                             | Purpose                                               |
+| ----------------------------------- | ----------------------------------------------------- |
+| `patchoath init`                    | initialize local `.patchoath/` evidence state         |
+| `patchoath checkpoint --prompt "…"` | begin a two-phase checkpoint                          |
+| `patchoath checkpoint --finish`     | capture the after-state and bind evidence             |
+| `patchoath checkpoint --abort`      | discard the active checkpoint                         |
+| `patchoath diff [id]`               | inspect current or saved Blast Radius                 |
+| `patchoath attest …`                | one-shot contract check for existing worktree changes |
+| `patchoath verify [id]`             | recompute receipt and verify Git / visual evidence    |
+| `patchoath contract-delta [id]`     | compute a restricted evidence-bound authority delta   |
+| `patchoath review …`                | record or verify a historical human review            |
+| `patchoath capsule …`               | create or verify minimum-disclosure evidence          |
+| `patchoath replay`                  | replay the current session timeline                   |
+| `patchoath report [id]`             | generate a standalone local review report             |
+| `patchoath restore [id]`            | preview or safely apply a guarded restore             |
 
 ## Install from the repository
 

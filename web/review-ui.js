@@ -1,5 +1,4 @@
-const reportData =
-  window.__PATCHOATH_REPORT__ || window.__VIBETRACE_REPORT__;
+const reportData = window.__PATCHOATH_REPORT__ || window.__VIBETRACE_REPORT__;
 const checkpointId = document.getElementById("checkpointId");
 const reviewPlane = document.getElementById("reviewPlane");
 

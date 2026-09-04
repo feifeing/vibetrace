@@ -8,13 +8,13 @@ Intent → Authority → Effect → Review → Disclosure
 
 The stages are deliberately different kinds of evidence.
 
-| Stage      | Question                                                              | Evidence type                                      |
-| ---------- | --------------------------------------------------------------------- | -------------------------------------------------- |
-| Intent     | What did the prompt appear to ask for?                                | Transparent heuristic context                      |
-| Authority  | What did the developer explicitly allow?                              | User-declared Change Contract                      |
-| Effect     | What actually changed?                                                | Git objects + optional visual evidence             |
-| Review     | What does this exact historical effect imply for human review?        | Mechanical delta + separate historical review     |
-| Disclosure | What evidence is permitted to leave the local review context?         | Explicit Disclosure Policy + Evidence Capsule      |
+| Stage      | Question                                                       | Evidence type                                 |
+| ---------- | -------------------------------------------------------------- | --------------------------------------------- |
+| Intent     | What did the prompt appear to ask for?                         | Transparent heuristic context                 |
+| Authority  | What did the developer explicitly allow?                       | User-declared Change Contract                 |
+| Effect     | What actually changed?                                         | Git objects + optional visual evidence        |
+| Review     | What does this exact historical effect imply for human review? | Mechanical delta + separate historical review |
+| Disclosure | What evidence is permitted to leave the local review context?  | Explicit Disclosure Policy + Evidence Capsule |
 
 ## Why add a review plane?
 

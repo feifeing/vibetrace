@@ -610,7 +610,10 @@ function render() {
   if (!checkpoint) return;
   renderTimeline();
   elements.evidenceTitle.textContent = checkpoint.prompt.text;
-  elements.checkpointId.textContent = checkpoint.id.replace(/^(?:po|vt)_/u, "#");
+  elements.checkpointId.textContent = checkpoint.id.replace(
+    /^(?:po|vt)_/u,
+    "#",
+  );
   renderVisual(checkpoint);
   renderImpact(checkpoint);
 }

@@ -60,7 +60,9 @@ function fileSummary(files) {
 function printPlan(plan, stdout) {
   stdout.write("\n");
   stdout.write(`✦ PatchOath guarded restore ${plan.checkpointId}\n`);
-  stdout.write(`  status       ${plan.canApply ? "READY" : "BLOCKED BY DRIFT"}\n`);
+  stdout.write(
+    `  status       ${plan.canApply ? "READY" : "BLOCKED BY DRIFT"}\n`,
+  );
   stdout.write(
     `  drift        ${plan.drift.length} file(s) since checkpoint completion\n`,
   );
@@ -70,7 +72,9 @@ function printPlan(plan, stdout) {
     stdout.write(`  - ${rename}${file.path}\n`);
   }
   if (!plan.canApply) {
-    stdout.write("  current worktree differs from the checkpoint after-state:\n");
+    stdout.write(
+      "  current worktree differs from the checkpoint after-state:\n",
+    );
     for (const file of plan.drift) stdout.write(`  ! ${file.path}\n`);
   }
   stdout.write("\n");

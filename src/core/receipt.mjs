@@ -140,10 +140,7 @@ function coverageForVersion(version) {
 
 export function createEvidenceReceipt(
   checkpoint,
-  {
-    version = CURRENT_EVIDENCE_VERSION,
-    legacyPrefix = false,
-  } = {},
+  { version = CURRENT_EVIDENCE_VERSION, legacyPrefix = false } = {},
 ) {
   if (!SUPPORTED_EVIDENCE_VERSIONS.has(version)) {
     throw new Error(`Unsupported Evidence Receipt version: ${version}.`);

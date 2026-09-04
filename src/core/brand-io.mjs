@@ -3,7 +3,10 @@ const REPLACEMENTS = [
   [/vibetrace/gu, "patchoath"],
   [/\.vibetrace/gu, ".patchoath"],
   [/\b0\.2\.0\b/gu, "0.3.0"],
-  [/time travel for vibe coding/gu, "evidence-backed change control for AI coding"],
+  [
+    /time travel for vibe coding/gu,
+    "evidence-backed change control for AI coding",
+  ],
 ];
 
 export function brandText(value) {

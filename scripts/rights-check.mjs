@@ -34,7 +34,9 @@ if (
   packageLock.name !== "patchoath" ||
   packageLock.packages?.[""]?.name !== "patchoath"
 ) {
-  fail("package-lock.json root package metadata must use the PatchOath package name.");
+  fail(
+    "package-lock.json root package metadata must use the PatchOath package name.",
+  );
 }
 if (packageJson.bin?.patchoath !== "./bin/patchoath.mjs") {
   fail("The primary package CLI must be patchoath -> ./bin/patchoath.mjs.");
@@ -119,7 +121,7 @@ for (const path of [
 }
 
 const readme = await readText("README.md");
-if (!readme.includes("<h1 align=\"center\">PatchOath</h1>")) {
+if (!readme.includes('<h1 align="center">PatchOath</h1>')) {
   fail("README hero must identify the product as PatchOath.");
 }
 if (!readme.includes("docs/patchoath-mark.svg")) {
@@ -148,7 +150,9 @@ if (retiredCommandPattern.test(html)) {
 for (const name of jsFiles) {
   const text = await readFile(join(webDirectory, name), "utf8");
   if (retiredProductPattern.test(text)) {
-    fail(`${name} contains the retired VibeTrace product name in dashboard code.`);
+    fail(
+      `${name} contains the retired VibeTrace product name in dashboard code.`,
+    );
   }
   if (retiredCommandPattern.test(text)) {
     fail(`${name} contains a retired vibetrace CLI command string.`);

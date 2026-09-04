@@ -1,7 +1,4 @@
-import {
-  CHECKPOINT_ID_PREFIX,
-  LEGACY_CHECKPOINT_ID_PREFIX,
-} from "./brand.mjs";
+import { CHECKPOINT_ID_PREFIX, LEGACY_CHECKPOINT_ID_PREFIX } from "./brand.mjs";
 
 export const CHECKPOINT_SCHEMA_VERSION = 2;
 export const CONFIG_SCHEMA_VERSION = 1;

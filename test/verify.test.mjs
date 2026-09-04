@@ -26,7 +26,8 @@ function anchorCheckpointRefs(root, checkpoint) {
       `refs/patchoath/checkpoints/${checkpoint.id}/${phase}`,
       checkpoint[phase].commit,
     ]);
-    checkpoint[phase].ref = `refs/patchoath/checkpoints/${checkpoint.id}/${phase}`;
+    checkpoint[phase].ref =
+      `refs/patchoath/checkpoints/${checkpoint.id}/${phase}`;
   }
 }
 
@@ -136,7 +137,9 @@ test("verification rejects a PatchOath checkpoint ref that drifts from stored Gi
     ),
   );
   assert.ok(
-    verified.gitEvidence.every((item) => item.ref.startsWith("refs/patchoath/")),
+    verified.gitEvidence.every((item) =>
+      item.ref.startsWith("refs/patchoath/"),
+    ),
   );
 
   await writeFile(join(root, "drift.txt"), "new commit\n", "utf8");

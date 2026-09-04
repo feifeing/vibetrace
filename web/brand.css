@@ -68,7 +68,12 @@ body::before {
   position: absolute;
   right: 0;
   bottom: -0.55rem;
-  font: 600 0.66rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font:
+    600 0.66rem/1.2 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
   letter-spacing: 0.13em;
   color: rgba(200, 255, 102, 0.58);
 }

@@ -160,10 +160,7 @@ try {
   assert.equal(contractDelta.status, "already-compliant");
   assert.equal(contractDelta.sourceReceiptVerified, true);
   assert.equal(contractDelta.gitEffectRecomputed, true);
-  assert.match(
-    contractDelta.proposalReceipt.receiptId,
-    /^pocd_[a-f0-9]{24}$/u,
-  );
+  assert.match(contractDelta.proposalReceipt.receiptId, /^pocd_[a-f0-9]{24}$/u);
 
   const review = JSON.parse(
     runCli(cli, project, [

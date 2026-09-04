@@ -9,7 +9,9 @@ import {
 } from "node:fs/promises";
 import { isAbsolute, join, resolve } from "node:path";
 import {
+  LEGACY_REF_NAMESPACE,
   LEGACY_STORE_DIRECTORY_NAME,
+  REF_NAMESPACE,
   STORE_DIRECTORY_NAME,
 } from "./brand.mjs";
 import { CONFIG_SCHEMA_VERSION, assertValidCheckpoint } from "./schema.mjs";
@@ -89,6 +91,19 @@ async function ensureLocalExclude(root) {
     `${existing}${separator}${missing.join("\n")}\n`,
     "utf8",
   );
+}
+
+function normalizeNewCheckpointRefs(checkpoint) {
+  if (!checkpoint?.id?.startsWith("po_")) return checkpoint;
+  for (const phase of ["before", "after"]) {
+    const ref = checkpoint[phase]?.ref;
+    if (typeof ref !== "string") continue;
+    const legacyPrefix = `${LEGACY_REF_NAMESPACE}/checkpoints/`;
+    if (ref.startsWith(legacyPrefix)) {
+      checkpoint[phase].ref = `${REF_NAMESPACE}${ref.slice(LEGACY_REF_NAMESPACE.length)}`;
+    }
+  }
+  return checkpoint;
 }
 
 export async function initializeStore(root) {
@@ -172,6 +187,7 @@ export async function loadSession(root, id) {
 }
 
 export async function saveCheckpoint(root, checkpoint) {
+  normalizeNewCheckpointRefs(checkpoint);
   if (!checkpoint.authorization) {
     checkpoint.authorization = runtimeChangeContract();
   }

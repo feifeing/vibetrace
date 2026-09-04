@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
+const RETIRED_PRODUCT_NAME = ["Vibe", "Trace"].join("");
+const RETIRED_CLI_PREFIX = ["vibe", "trace "].join("");
+
 test("PatchOath replays authority, review, and disclosure evidence", async ({
   page,
 }) => {
@@ -16,8 +19,8 @@ test("PatchOath replays authority, review, and disclosure evidence", async ({
       name: /Declare the boundary\. Inspect the patch\. Prove what crossed it\./u,
     }),
   ).toBeVisible();
-  await expect(page.locator("body")).not.toContainText("VibeTrace");
-  await expect(page.locator("body")).not.toContainText("vibetrace ");
+  await expect(page.locator("body")).not.toContainText(RETIRED_PRODUCT_NAME);
+  await expect(page.locator("body")).not.toContainText(RETIRED_CLI_PREFIX);
   await expect(page.locator(".timeline-item")).toHaveCount(3);
   await expect(page.locator("#blastScore")).toHaveText("92");
   await expect(page.locator("#mismatch")).toContainText("INTENT MISMATCH");

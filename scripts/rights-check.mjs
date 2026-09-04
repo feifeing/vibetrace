@@ -109,6 +109,15 @@ for (const required of [
   }
 }
 
+try {
+  await readFile(join(root, "src/core/brand-io.mjs"));
+  fail(
+    "src/core/brand-io.mjs must not exist: indiscriminate output rewriting can corrupt machine-readable evidence, legacy refs, paths, or user data.",
+  );
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
+
 const retiredCommandPattern =
   /\bvibetrace\s+(?:init|checkpoint|diff|attest|verify|restore|capsule|contract-delta|review|replay|session|report)\b/u;
 const retiredProductPattern = /\bVibeTrace\b/u;
@@ -240,7 +249,6 @@ const legacyBrandAllowlist = new Set([
   "docs/related-work.md",
   "docs/release-readiness.md",
   "scripts/rights-check.mjs",
-  "src/core/brand-io.mjs",
   "src/core/brand.mjs",
   "test/brand-migration.test.mjs",
 ]);
@@ -287,6 +295,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, retired-brand strings are confined to explicit migration/compatibility contexts, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
+    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, unsafe output rewriting is absent, retired-brand strings are confined to explicit migration/compatibility contexts, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
   );
 }

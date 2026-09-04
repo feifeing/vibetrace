@@ -54,11 +54,6 @@ if (packageJson.license !== "MIT") {
     `Unexpected repository package license: ${packageJson.license || "missing"}.`,
   );
 }
-if (!String(packageJson.description || "").includes("PatchOath") && false) {
-  // The npm `description` intentionally describes the product without repeating
-  // its package name. Keep this branch as documentation that name repetition is
-  // not a release requirement.
-}
 
 const requiredPackageFiles = ["LICENSE", "LEGAL.md", "THIRD_PARTY_NOTICES.md"];
 for (const required of requiredPackageFiles) {
@@ -104,8 +99,10 @@ for (const required of [
   }
 }
 
-// Public product surfaces must not drift back to the retired working brand.
-// Historical/legal/migration records are deliberately excluded from this list.
+const retiredCommandPattern =
+  /\bvibetrace\s+(?:init|checkpoint|diff|attest|verify|restore|capsule|contract-delta|review|replay|session|report)\b/u;
+const retiredProductPattern = /\bVibeTrace\b/u;
+
 for (const path of [
   "README.md",
   "SECURITY.md",
@@ -113,10 +110,10 @@ for (const path of [
   "THIRD_PARTY_NOTICES.md",
 ]) {
   const text = await readText(path);
-  if (/\bVibeTrace\b/u.test(text)) {
+  if (retiredProductPattern.test(text)) {
     fail(`${path} contains the retired VibeTrace product name.`);
   }
-  if (/\bvibetrace\s+(?:init|checkpoint|diff|attest|verify|restore|capsule|contract-delta|review|replay|session|report)\b/u.test(text)) {
+  if (retiredCommandPattern.test(text)) {
     fail(`${path} contains a retired vibetrace CLI example.`);
   }
 }
@@ -141,19 +138,19 @@ const jsFiles = (await readdir(webDirectory))
 if (!html.includes("<title>PatchOath —")) {
   fail("web/index.html must expose the PatchOath product title.");
 }
-if (/\bVibeTrace\b/u.test(html)) {
+if (retiredProductPattern.test(html)) {
   fail("web/index.html contains the retired VibeTrace product name.");
 }
-if (/\bvibetrace\s+/u.test(html)) {
+if (retiredCommandPattern.test(html)) {
   fail("web/index.html contains a retired vibetrace CLI example.");
 }
 
 for (const name of jsFiles) {
   const text = await readFile(join(webDirectory, name), "utf8");
-  if (/\bVibeTrace\b/u.test(text)) {
+  if (retiredProductPattern.test(text)) {
     fail(`${name} contains the retired VibeTrace product name in dashboard code.`);
   }
-  if (/['"`]vibetrace\s+(?:init|checkpoint|diff|attest|verify|restore|capsule|contract-delta|review|replay|session|report)\b/u.test(text)) {
+  if (retiredCommandPattern.test(text)) {
     fail(`${name} contains a retired vibetrace CLI command string.`);
   }
 }
@@ -188,24 +185,65 @@ const excludedDirectories = new Set([
   "test-results",
 ]);
 const fontExtensions = new Set([".ttf", ".otf", ".woff", ".woff2", ".eot"]);
+const scannedTextExtensions = new Set([
+  ".css",
+  ".html",
+  ".js",
+  ".json",
+  ".md",
+  ".mjs",
+  ".svg",
+  ".yaml",
+  ".yml",
+]);
+const legacyBrandAllowlist = new Set([
+  "LEGAL.md",
+  "bin/vibetrace.mjs",
+  "docs/asset-provenance.md",
+  "docs/brand-clearance.md",
+  "docs/evidence-receipts.md",
+  "docs/related-work.md",
+  "scripts/rights-check.mjs",
+  "src/core/brand-io.mjs",
+  "src/core/brand.mjs",
+  "test/brand-migration.test.mjs",
+]);
 
-async function scanFonts(directory) {
+async function scanRepository(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (entry.isDirectory() && excludedDirectories.has(entry.name)) continue;
     const path = join(directory, entry.name);
     if (entry.isDirectory()) {
-      await scanFonts(path);
+      await scanRepository(path);
       continue;
     }
-    if (fontExtensions.has(extname(entry.name).toLowerCase())) {
+
+    const extension = extname(entry.name).toLowerCase();
+    if (fontExtensions.has(extension)) {
       fail(
         `Bundled font requires an explicit redistribution review before merge: ${relative(root, path)}.`,
+      );
+    }
+
+    if (!scannedTextExtensions.has(extension)) continue;
+    const repositoryPath = relative(root, path).replaceAll("\\", "/");
+    if (legacyBrandAllowlist.has(repositoryPath)) continue;
+
+    const text = await readFile(path, "utf8");
+    if (retiredProductPattern.test(text)) {
+      fail(
+        `${repositoryPath} contains VibeTrace outside the explicit migration/compatibility allowlist.`,
+      );
+    }
+    if (retiredCommandPattern.test(text)) {
+      fail(
+        `${repositoryPath} contains a retired vibetrace CLI command outside the explicit compatibility allowlist.`,
       );
     }
   }
 }
 
-await scanFonts(root);
+await scanRepository(root);
 
 if (failures.length > 0) {
   console.error("Rights/release gate failed:");
@@ -213,6 +251,6 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, public product surfaces contain no retired-brand copy or CLI examples, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
+    `Rights/release gate passed: PatchOath package/CLI metadata match the reviewed migration baseline, retired-brand strings are confined to the explicit migration/compatibility allowlist, package remains private, dependency licenses match the reviewed baseline, required notices and brand-clearance records are present, ${cssFiles.length} dashboard stylesheet(s) contain no unreviewed remote CSS assets, and no bundled fonts were found.`,
   );
 }

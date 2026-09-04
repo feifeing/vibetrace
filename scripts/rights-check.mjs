@@ -196,13 +196,17 @@ const scannedTextExtensions = new Set([
   ".yaml",
   ".yml",
 ]);
+
+// These files are allowed to name the retired product only because their
+// purpose is migration provenance, legal history, compatibility, or the gate
+// that enforces this list. Ordinary product/source surfaces are not allowlisted.
 const legacyBrandAllowlist = new Set([
   "LEGAL.md",
   "bin/vibetrace.mjs",
-  "docs/asset-provenance.md",
   "docs/brand-clearance.md",
   "docs/evidence-receipts.md",
   "docs/related-work.md",
+  "docs/release-readiness.md",
   "scripts/rights-check.mjs",
   "src/core/brand-io.mjs",
   "src/core/brand.mjs",
